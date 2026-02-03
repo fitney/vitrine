@@ -20,6 +20,7 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+            width: 80%;
         }
         
         .btn-fallback {
@@ -37,56 +38,86 @@
 <body>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando a Vitrine...</h2>
-        <p>Verificando suas credenciais Google.</p>
+        <h2 id="statusTexto">Buscando servidor...</h2>
+        <p id="descTexto">Obtendo endereço atualizado.</p>
         
         <a id="btnErro" class="btn-fallback" href="#" target="_top">
-            CLIQUE PARA ENTRAR AGORA
+            ACESSAR SISTEMA
         </a>
     </div>
 
     <iframe id="sistemaFrame" allowfullscreen></iframe>
 
     <script>
-       
-        var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyFsAC-5IQacBHotxrWuJxyrPyniHwbcobZtgJocNSolyYPbBtDSBO--gaMijkTJ4LHZQ/exec";
+
+        var URL_PLANILHA_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRrQiMYNE723u65wMxoX77grTRnyFBcn_xCNxwEHJDvUET4Q3ldM23XT9ZO4If67aOwbgr_vHEVvdCb/pub?output=csv";
         var iframe = document.getElementById('sistemaFrame');
         var statusTexto = document.getElementById('statusTexto');
+        var descTexto = document.getElementById('descTexto');
         var btnErro = document.getElementById('btnErro');
-        
-        // 1. Injeta o link no Iframe
-        iframe.src = URL_DO_SCRIPT;
-
-        // 2. Prepara o link blindado (AccountChooser)
-        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
-        btnErro.href = linkBlindado;
-
         var carregouSucesso = false;
 
-        // 3. OUVINTE: Espera o "Grito" de sucesso do GAS
+        // Função principal que inicia tudo
+        async function iniciarSistema() {
+            try {
+                // 1. Busca o link dentro da planilha
+                const resposta = await fetch(URL_PLANILHA_CSV);
+                let urlDoGas = await resposta.text();
+                
+                // Limpa quebras de linha ou espaços que possam vir da planilha
+                urlDoGas = urlDoGas.trim();
+
+                console.log("Link obtido da planilha:", urlDoGas);
+
+                // 2. Atualiza a tela e o Iframe
+                statusTexto.innerText = "Conectando ao sistema...";
+                descTexto.innerText = "Validando acesso...";
+                
+                // Injeta o link no iframe
+                iframe.src = urlDoGas;
+
+                // Prepara o link de fallback (AccountChooser)
+                var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(urlDoGas);
+                btnErro.href = linkBlindado;
+
+                // 3. Inicia o Cronômetro de Segurança (8 segundos agora)
+                setTimeout(function() {
+                    if (!carregouSucesso) {
+                        console.log("Timeout: App não respondeu. Ativando fallback.");
+                        ativarModoErro(linkBlindado);
+                    }
+                }, 8000);
+
+            } catch (erro) {
+                console.error("Erro ao ler a planilha:", erro);
+                statusTexto.innerText = "Erro de configuração.";
+                descTexto.innerText = "Não foi possível obter o link do sistema.";
+            }
+        }
+
+        function ativarModoErro(linkDestino) {
+            statusTexto.innerText = "Redirecionando para login seguro...";
+            descTexto.innerText = "Multi-login detectado. Clique abaixo se não redirecionar.";
+            iframe.style.display = 'none';
+            btnErro.style.display = "inline-block";
+            
+            // Tenta redirecionar automaticamente
+            window.location.replace(linkDestino);
+        }
+
+        // 4. OUVINTE: Espera o "Grito" de sucesso do GAS
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
                 carregouSucesso = true;
-                console.log("Sucesso! O App rodou no Iframe.");
+                console.log("Sucesso! O App carregou.");
                 iframe.style.opacity = "1";
                 document.getElementById('loadingMsg').style.display = 'none';
             }
         });
 
-        // 4. TEMPORIZADOR DE SEGURANÇA (4 Segundos)
-        setTimeout(function() {
-            if (!carregouSucesso) {
-                console.log("Falha no Iframe. Ativando redirecionamento.");
-                statusTexto.innerText = "Redirecionando para login seguro...";
-                document.querySelector('p').innerText = "Caso não redirecione, clique abaixo.";
-                iframe.style.display = 'none';
-                btnErro.style.display = "inline-block";
-                
-                // Redireciona automaticamente para o AccountChooser
-                window.location.replace(linkBlindado);
-            }
-        }, 4000); 
-    </script>
+        // Dispara o processo ao carregar a página
+        iniciarSistema();
 
+    </script>
 </body>
 </html>
