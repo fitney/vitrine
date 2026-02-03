@@ -38,8 +38,8 @@
 <body>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Buscando servidor...</h2>
-        <p id="descTexto">Obtendo endereço atualizado.</p>
+        <h2 id="statusTexto"></h2>
+        <p id="descTexto"></p>
         
         <a id="btnErro" class="btn-fallback" href="#" target="_top">
             ACESSAR SISTEMA
@@ -50,7 +50,7 @@
 
     <script>
 
-        var URL_PLANILHA_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRrQiMYNE723u65wMxoX77grTRnyFBcn_xCNxwEHJDvUET4Q3ldM23XT9ZO4If67aOwbgr_vHEVvdCb/pub?output=csv";
+        var URL_PLANILHA_CSV = "https://https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
         var iframe = document.getElementById('sistemaFrame');
         var statusTexto = document.getElementById('statusTexto');
         var descTexto = document.getElementById('descTexto');
@@ -70,8 +70,8 @@
                 console.log("Link obtido da planilha:", urlDoGas);
 
                 // 2. Atualiza a tela e o Iframe
-                statusTexto.innerText = "Conectando ao sistema...";
-                descTexto.innerText = "Validando acesso...";
+                statusTexto.innerText = "Carregando loja virtual...";
+                descTexto.innerText = "";
                 
                 // Injeta o link no iframe
                 iframe.src = urlDoGas;
@@ -86,7 +86,7 @@
                         console.log("Timeout: App não respondeu. Ativando fallback.");
                         ativarModoErro(linkBlindado);
                     }
-                }, 8000);
+                }, 4000);
 
             } catch (erro) {
                 console.error("Erro ao ler a planilha:", erro);
