@@ -5,18 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vitrine Fitney</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background-color: #f8f9fa; font-family: sans-serif; }
+        /* Estilo Profissional e Limpo */
+        body, html { margin: 0; padding: 0; height: 100%; background-color: #ffffff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #3c4043; }
         #sistemaFrame { width: 100%; height: 100vh; border: none; display: block; }
-        
+
+        /* Card de Orientação - Visual de Suporte Google */
         #fallbackMsg { 
             display: none; position: absolute; top: 50%; left: 50%; 
             transform: translate(-50%, -50%); text-align: center; 
-            width: 90%; max-width: 500px; padding: 20px;
-            background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%; max-width: 420px; padding: 40px;
+            background: white; border-radius: 8px; border: 1px solid #dadce0;
         }
-        .instrucao { text-align: left; background: #eee; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
-        .btn-link { display: inline-block; background: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        #copiarLink { color: #1a73e8; cursor: pointer; font-size: 12px; text-decoration: underline; }
+
+        .icon-user { color: #1a73e8; font-size: 48px; margin-bottom: 15px; }
+        h2 { font-weight: 400; font-size: 24px; margin: 0 0 10px 0; color: #202124; }
+        p { font-size: 15px; color: #70757a; line-height: 1.5; margin-bottom: 25px; }
+
+        .passos { text-align: left; margin-bottom: 30px; }
+        .passo-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; }
+        .num { background: #1a73e8; color: white; width: 22px; height: 22px; border-radius: 50%; 
+               display: flex; justify-content: center; align-items: center; margin-right: 12px; font-size: 11px; flex-shrink: 0; }
+
+        .btn-principal { display: block; background: #1a73e8; color: white; padding: 14px; text-decoration: none; 
+                         border-radius: 4px; font-weight: 500; font-size: 14px; transition: background 0.2s; }
+        .btn-principal:hover { background: #1765cc; }
+        
+        #btnCopiar { background: none; border: none; color: #1a73e8; cursor: pointer; font-size: 13px; 
+                     margin-top: 15px; font-weight: 500; display: inline-flex; align-items: center; }
     </style>
 </head>
 <body>
@@ -24,43 +39,38 @@
     <iframe id="sistemaFrame" src="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec"></iframe>
 
     <div id="fallbackMsg">
-        <h2 style="color: #d93025;">Conflito de Conta Detectado</h2>
-        <p>O Google está tendo problemas para identificar qual das suas contas usar dentro deste navegador.</p>
+        <div class="icon-user">👤</div>
+        <h2>Sincronizando Vitrine</h2>
+        <p>Detectamos múltiplas contas ativas. Para acessar sem erros de permissão, siga os passos:</p>
         
-        <div class="instrucao">
-            <strong>Como resolver agora:</strong><br>
-            1. Copie o link abaixo;<br>
-            2. Abra uma <b>Guia Anônima</b> no seu navegador;<br>
-            3. Cole o link e acesse a loja sem erros.
+        <div class="passos">
+            <div class="passo-item"><div class="num">1</div><span>Clique em copiar o link da loja abaixo.</span></div>
+            <div class="passo-item"><div class="num">2</div><span>Abra uma <b>Guia Anônima</b> no seu navegador.</span></div>
+            <div class="passo-item"><div class="num">3</div><span>Cole o link e aproveite a vitrine.</span></div>
         </div>
-
-        <p id="urlDisplay" style="word-break: break-all; font-size: 11px; color: #666;"></p>
-        <span id="copiarLink">Copiar link da vitrine</span><br><br>
         
-        <a href="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec" target="_top" class="btn-link">Tentar Abrir Direto</a>
+        <a href="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec" target="_top" class="btn-principal">Tentar Acesso Direto</a>
+        
+        <button id="btnCopiar">📋 Copiar link da vitrine</button>
     </div>
 
     <script>
         var URL_LOJA = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        document.getElementById('urlDisplay').innerText = URL_LOJA;
 
-        // Monitor de sucesso
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
                 clearTimeout(timeoutFalha);
             }
         });
 
-        // Se em 5 segundos não carregar, mostra a orientação
         var timeoutFalha = setTimeout(function() {
             document.getElementById('sistemaFrame').style.display = 'none';
             document.getElementById('fallbackMsg').style.display = 'block';
-        }, 4000);
+        }, 5000);
 
-        // Função simples para copiar o link
-        document.getElementById('copiarLink').onclick = function() {
+        document.getElementById('btnCopiar').onclick = function() {
             navigator.clipboard.writeText(URL_LOJA);
-            alert("Link copiado! Agora abra uma aba anônima e cole.");
+            alert("Link copiado com sucesso!");
         };
     </script>
 </body>
