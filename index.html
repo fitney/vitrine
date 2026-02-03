@@ -39,17 +39,16 @@
     <iframe id="sistemaFrame" src="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec"></iframe>
 
     <div id="fallbackMsg">
-        <div class="icon-user">👤</div>
+        <div class="icon-user">⛓️‍💥</div>
         <h2>Sincronizando Vitrine</h2>
-        <p>Detectamos múltiplas contas ativas. Para acessar sem erros de permissão, siga os passos:</p>
+        <p>Conflito de Conta Detectado. O navegador está tendo problemas para identificar qual das suas contas usar dentro deste navegador. Para visualizar o site, siga os passos:</p>
         
         <div class="passos">
-            <div class="passo-item"><div class="num">1</div><span>Clique em copiar o link da loja abaixo.</span></div>
-            <div class="passo-item"><div class="num">2</div><span>Abra uma <b>Guia Anônima</b> no seu navegador.</span></div>
-            <div class="passo-item"><div class="num">3</div><span>Cole o link e aproveite a vitrine.</span></div>
+            <div class="passo-item"><div class="num">1</div><span>Abra uma <b>Guia Anônima</b> no seu navegador.</span></div>
+            <div class="passo-item"><div class="num">2</div><span>Cole o link da vitrine.</span></div>
         </div>
         
-        <a href="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec" target="_top" class="btn-principal">Tentar Acesso Direto</a>
+        <p>https://fitney.github.io/vitrine/</p>
         
         <button id="btnCopiar">📋 Copiar link da vitrine</button>
     </div>
@@ -66,10 +65,10 @@
         var timeoutFalha = setTimeout(function() {
             document.getElementById('sistemaFrame').style.display = 'none';
             document.getElementById('fallbackMsg').style.display = 'block';
-        }, 5000);
+        }, 4000);
 
         document.getElementById('btnCopiar').onclick = function() {
-            navigator.clipboard.writeText(URL_LOJA);
+            navigator.clipboard.writeText("https://fitney.github.io/vitrine/");
             alert("Link copiado com sucesso!");
         };
     </script>
