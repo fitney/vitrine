@@ -33,9 +33,28 @@
             font-weight: bold;
             margin-top: 20px;
         }
+
+        #debugConsole {
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; 
+            background: rgba(0,0,0,0.8); 
+            color: #0f0; 
+            font-family: monospace; 
+            font-size: 10px; 
+            z-index: 9999; 
+            max-height: 100px; 
+            overflow-y: auto; 
+            pointer-events: none;
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
+
+    <div id="debugConsole">
+        [DEBUG LOG ATIVO]<br>
+    </div>
 
     <div id="loadingMsg">
         <h2 id="statusTexto">Carregando Loja Virtual...</h2>
@@ -50,9 +69,6 @@
         // CONFIGURAÇÃO
         // =================================================================
         var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        
-        // Forçando a URL com os parâmetros de sessão que você identificou como funcionais
-        var URL_AUTENTICADA = URL_DO_SCRIPT + "?pli=1&authuser=0";
         // =================================================================
 
         var iframe = document.getElementById('sistemaFrame');
@@ -60,20 +76,31 @@
         var statusTexto = document.getElementById('statusTexto');
         var descTexto = document.getElementById('descTexto');
         var btnErro = document.getElementById('btnErro');
+        var debugDiv = document.getElementById('debugConsole');
         
         var carregouSucesso = false;
-        
-        // Verifica se o usuário já conseguiu entrar com sucesso neste navegador antes
+
+        // Função de Log para o Console Visual
+        function logDebug(msg) {
+            debugDiv.innerHTML += "> " + msg + "<br>";
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        logDebug("Iniciando sistema...");
+
+        // Verifica memória de acesso
         var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
+        logDebug("Usuário já logado antes? " + (usuarioJaLogado || "não"));
 
-        // Configura links: O iframe tenta o link normal, o botão/redirecionamento força a sessão 0
+        // Configura links - Agora sem parâmetros pli/authuser
         iframe.src = URL_DO_SCRIPT;
-        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_AUTENTICADA);
-        btnErro.href = linkBlindado;
+        var linkLogin = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
+        btnErro.href = linkLogin;
 
-        // --- LÓGICA DE VELOCIDADE ---
+        // --- LÓGICA DE VELOCIDADE (MODO RÁPIDO) ---
         if (usuarioJaLogado === "sim") {
-            console.log("Usuário recorrente. Modo rápido ativado.");
+            logDebug("Modo rápido: Exibindo iframe.");
             iframe.style.opacity = "1";
             loadingDiv.style.display = 'none';
         }
@@ -81,52 +108,39 @@
         // --- OUVINTE DE SUCESSO ---
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
+                logDebug("SINAL DE SUCESSO RECEBIDO!");
                 carregouSucesso = true;
-                
-                // Marca a flag apenas no acesso direto bem-sucedido
                 localStorage.setItem("APP_GAS_SUCESSO", "sim");
-
                 iframe.style.opacity = "1";
                 loadingDiv.style.display = 'none';
             }
         });
 
-        // --- SEGURANÇA CONTRA FALHAS (Ajustado para 4 Segundos) ---
+        // --- VERIFICAÇÃO ÚNICA DE 4 SEGUNDOS ---
         setTimeout(function() {
             if (!carregouSucesso) {
+                logDebug("Timeout de 4s atingido. Verificando...");
+                
                 if (usuarioJaLogado === "sim") {
-                    console.log("Sessão recorrente expirou.");
-                    iframe.style.opacity = "0";
+                    logDebug("Falha em usuário recorrente. Sessão pode ter caído.");
                     iframe.style.display = "none"; 
-                    
                     loadingDiv.style.display = 'block';
                     statusTexto.innerText = "Sessão Expirada";
-                    descTexto.innerText = "Precisamos validar seu acesso novamente.";
+                    descTexto.innerText = "Por favor, valide seu acesso novamente.";
                     btnErro.style.display = "inline-block";
-                    
                     localStorage.removeItem("APP_GAS_SUCESSO");
                 } else {
-                    console.log("Erro inicial ou multi-login. Redirecionando para URL autenticada.");
+                    logDebug("Acesso direto falhou. Redirecionando para login Google...");
                     iframe.style.display = 'none';
                     btnErro.style.display = "inline-block";
                     
-                    // Redireciona automaticamente para o AccountChooser com o link ?pli=1&authuser=0
-                    window.location.replace(linkBlindado);
+                    // Redireciona para o AccountChooser limpo
+                    window.location.replace(linkLogin);
                 }
+            } else {
+                logDebug("Carregamento confirmado. Timer encerrado.");
             }
-        }, 4000); // Exatos 4 segundos conforme solicitado
+        }, 4000); 
     </script>
 </body>
-<div id="debugConsole" style="position:fixed; top:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; font-family:monospace; font-size:10px; z-index:9999; max-height:100px; overflow-y:auto; pointer-events:none;">
-    [DEBUG LOG ATIVO]<br>
-</div>
-
-<script>
-    function logDebug(msg) {
-        var consoleDiv = document.getElementById('debugConsole');
-        consoleDiv.innerHTML += "> " + msg + "<br>";
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
-    // Substitua os console.log do seu script por logDebug
-</script>
 </html>
