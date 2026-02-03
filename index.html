@@ -8,74 +8,72 @@
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
         #sistemaFrame { width: 100%; height: 100vh; border: none; opacity: 0; transition: opacity 0.5s; }
         #loadingMsg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; }
-        .btn-portal { display: none; background-color: #4285f4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        #debugConsole { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace; font-size: 10px; z-index: 9999; max-height: 100px; overflow-y: auto; pointer-events: none; padding: 5px; }
+        
+        .btn-google {
+            display: none;
+            background-color: #ffffff;
+            color: #757575;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            border: 1px solid #dadce0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div id="debugConsole">[DEBUG LOG ATIVO]<br></div>
-
     <div id="loadingMsg">
-        <h2 id="statusTexto">Sincronizando Vitrine4...</h2>
-        <p id="descTexto">Validando sua conta com o servidor Google.</p>
-        <a id="btnPortal" class="btn-portal" href="#" target="_top">ENTRAR NA VITRINE</a>
+        <h2 id="statusTexto">Carregando Vitrine5...</h2>
+        <p id="descTexto">Sincronizando com sua conta Google.</p>
+        <a id="btnAuth" class="btn-google" href="#" target="_top">
+            Acessar com Google
+        </a>
     </div>
 
     <iframe id="sistemaFrame"></iframe>
 
     <script>
-        // 1. LINKS DE CONFIGURAÇÃO
+        // CONFIGURAÇÃO BASEADA NA SUA ANÁLISE TÉCNICA
         var URL_GAS = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        var URL_GITHUB = window.location.origin + window.location.pathname; 
-
+        
         var iframe = document.getElementById('sistemaFrame');
         var loadingDiv = document.getElementById('loadingMsg');
-        var btnPortal = document.getElementById('btnPortal');
-        var debugDiv = document.getElementById('debugConsole');
+        var btnAuth = document.getElementById('btnAuth');
+        var statusTexto = document.getElementById('statusTexto');
         var carregouSucesso = false;
 
-        function log(m) { debugDiv.innerHTML += "> " + m + "<br>"; debugDiv.scrollTop = debugDiv.scrollHeight; }
-
-        // 2. PREPARA O LINK DE LOGIN COM RETORNO PARA O GITHUB
-        // O "continue" aponta de volta para cá, com um marcador de retorno
-        var linkAutenticacao = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_GITHUB + "?retorno=sucesso");
-        btnPortal.href = linkAutenticacao;
-
-        log("Tentando conexão direta...");
-
-        // 3. TENTA CARREGAR O IFRAME
+        // 1. TENTA O ACESSO DIRETO (Default Account)
         iframe.src = URL_GAS;
 
-        // OUVINTE: Aguarda o sinal de sucesso vindo do Apps Script
+        // 2. PREPARA O LINK DO ACCOUNT CHOOSER (A SOLUÇÃO SUPERIOR)
+        // Isso transfere a responsabilidade da seleção para a interface do Google
+        btnAuth.href = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_GAS);
+
+        // OUVINTE DE SUCESSO (Opcional, caso o GAS já esteja configurado)
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
-                log("SUCESSO: Sessão validada pelo Google.");
                 carregouSucesso = true;
                 iframe.style.opacity = "1";
                 loadingDiv.style.display = 'none';
-                localStorage.setItem("APP_GAS_SUCESSO", "sim");
             }
         });
 
-        // 4. MONITORAMENTO ÚNICO DE 4 SEGUNDOS
+        // 3. MONITORAMENTO DE 4 SEGUNDOS
         setTimeout(function() {
             if (!carregouSucesso) {
-                log("Acesso direto falhou (provável bloqueio de cookies).");
-
-                // Se já voltamos do Google e continua falhando, o navegador é muito restritivo
-                if (window.location.search.includes("retorno=sucesso")) {
-                    log("Falha persistente após retorno. Mostrando botão manual.");
-                    document.getElementById('statusTexto').innerText = "Acesso Interrompido";
-                    document.getElementById('descTexto').innerText = "Seu navegador está bloqueando o carregamento interno.";
-                    btnPortal.style.display = "inline-block";
-                    // Tenta limpar a memória para um reset forçado
-                    localStorage.removeItem("APP_GAS_SUCESSO");
-                } else {
-                    // PRIMEIRA TENTATIVA: Faz o "salto" no Google para autenticar e volta
-                    log("Redirecionando para validação de conta...");
-                    window.location.replace(linkAutenticacao);
-                }
+                // Se o Iframe falhar (Erro 403, 404 ou multilogin), paramos de tentar silenciamente.
+                // Isso evita o loop infinito e o Erro 400 de Bad Request.
+                iframe.style.display = 'none';
+                statusTexto.innerText = "Sessão não identificada";
+                document.getElementById('descTexto').innerText = "Você possui múltiplas contas logadas. Selecione a conta correta para continuar:";
+                btnAuth.style.display = 'inline-flex';
             }
         }, 4000);
     </script>
