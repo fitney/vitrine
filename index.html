@@ -5,77 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vitrine Fitney</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
-        #sistemaFrame { width: 100%; height: 100vh; border: none; opacity: 0; transition: opacity 0.5s; }
-        #loadingMsg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; }
+        body, html { margin: 0; padding: 0; height: 100%; background-color: #f8f9fa; font-family: sans-serif; }
+        #sistemaFrame { width: 100%; height: 100vh; border: none; display: block; }
         
-        .btn-google {
-            display: none;
-            background-color: #ffffff;
-            color: #757575;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 500;
-            border: 1px solid #dadce0;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-            cursor: pointer;
+        #fallbackMsg { 
+            display: none; position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); text-align: center; 
+            width: 90%; max-width: 500px; padding: 20px;
+            background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        .instrucao { text-align: left; background: #eee; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
+        .btn-link { display: inline-block; background: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        #copiarLink { color: #1a73e8; cursor: pointer; font-size: 12px; text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando Vitrine5...</h2>
-        <p id="descTexto">Sincronizando com sua conta Google.</p>
-        <a id="btnAuth" class="btn-google" href="#" target="_top">
-            Acessar com Google
-        </a>
+    <iframe id="sistemaFrame" src="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec"></iframe>
+
+    <div id="fallbackMsg">
+        <h2 style="color: #d93025;">Conflito de Conta Detectado</h2>
+        <p>O Google está tendo problemas para identificar qual das suas contas usar dentro deste navegador.</p>
+        
+        <div class="instrucao">
+            <strong>Como resolver agora:</strong><br>
+            1. Copie o link abaixo;<br>
+            2. Abra uma <b>Guia Anônima</b> no seu navegador;<br>
+            3. Cole o link e acesse a loja sem erros.
+        </div>
+
+        <p id="urlDisplay" style="word-break: break-all; font-size: 11px; color: #666;"></p>
+        <span id="copiarLink">Copiar link da vitrine</span><br><br>
+        
+        <a href="https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec" target="_top" class="btn-link">Tentar Abrir Direto</a>
     </div>
 
-    <iframe id="sistemaFrame"></iframe>
-
     <script>
-        // CONFIGURAÇÃO BASEADA NA SUA ANÁLISE TÉCNICA
-        var URL_GAS = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        
-        var iframe = document.getElementById('sistemaFrame');
-        var loadingDiv = document.getElementById('loadingMsg');
-        var btnAuth = document.getElementById('btnAuth');
-        var statusTexto = document.getElementById('statusTexto');
-        var carregouSucesso = false;
+        var URL_LOJA = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
+        document.getElementById('urlDisplay').innerText = URL_LOJA;
 
-        // 1. TENTA O ACESSO DIRETO (Default Account)
-        iframe.src = URL_GAS;
-
-        // 2. PREPARA O LINK DO ACCOUNT CHOOSER (A SOLUÇÃO SUPERIOR)
-        // Isso transfere a responsabilidade da seleção para a interface do Google
-        btnAuth.href = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_GAS);
-
-        // OUVINTE DE SUCESSO (Opcional, caso o GAS já esteja configurado)
+        // Monitor de sucesso
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
-                carregouSucesso = true;
-                iframe.style.opacity = "1";
-                loadingDiv.style.display = 'none';
+                clearTimeout(timeoutFalha);
             }
         });
 
-        // 3. MONITORAMENTO DE 4 SEGUNDOS
-        setTimeout(function() {
-            if (!carregouSucesso) {
-                // Se o Iframe falhar (Erro 403, 404 ou multilogin), paramos de tentar silenciamente.
-                // Isso evita o loop infinito e o Erro 400 de Bad Request.
-                iframe.style.display = 'none';
-                statusTexto.innerText = "Sessão não identificada";
-                document.getElementById('descTexto').innerText = "Você possui múltiplas contas logadas. Selecione a conta correta para continuar:";
-                btnAuth.style.display = 'inline-flex';
-            }
+        // Se em 5 segundos não carregar, mostra a orientação
+        var timeoutFalha = setTimeout(function() {
+            document.getElementById('sistemaFrame').style.display = 'none';
+            document.getElementById('fallbackMsg').style.display = 'block';
         }, 4000);
+
+        // Função simples para copiar o link
+        document.getElementById('copiarLink').onclick = function() {
+            navigator.clipboard.writeText(URL_LOJA);
+            alert("Link copiado! Agora abra uma aba anônima e cole.");
+        };
     </script>
 </body>
 </html>
