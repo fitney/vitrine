@@ -34,6 +34,7 @@
             margin-top: 20px;
         }
 
+        /* Console de Debug fixo no topo */
         #debugConsole {
             position: fixed; 
             top: 0; left: 0; 
@@ -57,7 +58,7 @@
     </div>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando Loja Virtual...</h2>
+        <h2 id="statusTexto">Carregando Vitrine...</h2>
         <p id="descTexto">Aguarde um instante.</p>
         <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR NA LOJA</a>
     </div>
@@ -65,12 +66,9 @@
     <iframe id="sistemaFrame" allowfullscreen></iframe>
 
     <script>
-        // =================================================================
-        // CONFIGURAÇÃO
-        // =================================================================
+        // 1. CONFIGURAÇÃO - LINK EXTRAÍDO DA SUA PLANILHA
         var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        // =================================================================
-
+        
         var iframe = document.getElementById('sistemaFrame');
         var loadingDiv = document.getElementById('loadingMsg');
         var statusTexto = document.getElementById('statusTexto');
@@ -80,35 +78,34 @@
         
         var carregouSucesso = false;
 
-        // Função de Log para o Console Visual
         function logDebug(msg) {
             debugDiv.innerHTML += "> " + msg + "<br>";
             debugDiv.scrollTop = debugDiv.scrollHeight;
             console.log(msg);
         }
 
-        logDebug("Iniciando sistema...");
+        logDebug("Iniciando vitrine...");
 
-        // Verifica memória de acesso
+        // 2. VERIFICAÇÃO DE MEMÓRIA (LocalStorage)
         var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
-        logDebug("Usuário já logado antes? " + (usuarioJaLogado || "não"));
+        logDebug("Histórico de sucesso: " + (usuarioJaLogado || "vazio"));
 
-        // Configura links - Agora sem parâmetros pli/authuser
+        // 3. PREPARA LINKS (Sem parâmetros pli/authuser)
         iframe.src = URL_DO_SCRIPT;
         var linkLogin = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
         btnErro.href = linkLogin;
 
-        // --- LÓGICA DE VELOCIDADE (MODO RÁPIDO) ---
+        // --- MODO RÁPIDO PARA USUÁRIOS RECORRENTES ---
         if (usuarioJaLogado === "sim") {
-            logDebug("Modo rápido: Exibindo iframe.");
+            logDebug("Usuário antigo detectado. Abrindo Iframe.");
             iframe.style.opacity = "1";
             loadingDiv.style.display = 'none';
         }
 
-        // --- OUVINTE DE SUCESSO ---
+        // --- OUVINTE DE MENSAGEM (POSTMESSAGE) ---
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
-                logDebug("SINAL DE SUCESSO RECEBIDO!");
+                logDebug("SINAL DE SUCESSO: Aplicativo carregado no Iframe.");
                 carregouSucesso = true;
                 localStorage.setItem("APP_GAS_SUCESSO", "sim");
                 iframe.style.opacity = "1";
@@ -116,31 +113,32 @@
             }
         });
 
-        // --- VERIFICAÇÃO ÚNICA DE 4 SEGUNDOS ---
+        // --- MONITORAMENTO DE 4 SEGUNDOS ---
         setTimeout(function() {
             if (!carregouSucesso) {
-                logDebug("Timeout de 4s atingido. Verificando...");
+                logDebug("Timeout de 4s atingido.");
                 
                 if (usuarioJaLogado === "sim") {
-                    logDebug("Falha em usuário recorrente. Sessão pode ter caído.");
+                    logDebug("Falha em usuário recorrente. Sessão expirada?");
                     iframe.style.display = "none"; 
                     loadingDiv.style.display = 'block';
                     statusTexto.innerText = "Sessão Expirada";
-                    descTexto.innerText = "Por favor, valide seu acesso novamente.";
+                    descTexto.innerText = "Clique abaixo para validar seu acesso.";
                     btnErro.style.display = "inline-block";
                     localStorage.removeItem("APP_GAS_SUCESSO");
                 } else {
-                    logDebug("Acesso direto falhou. Redirecionando para login Google...");
+                    logDebug("Acesso direto falhou. Iniciando login Google.");
                     iframe.style.display = 'none';
                     btnErro.style.display = "inline-block";
                     
-                    // Redireciona para o AccountChooser limpo
+                    // REDIRECIONAMENTO ÚNICO: Tira do GitHub e manda pro Google oficial
                     window.location.replace(linkLogin);
                 }
             } else {
-                logDebug("Carregamento confirmado. Timer encerrado.");
+                logDebug("Timer encerrado: Loja já estava visível.");
             }
         }, 4000); 
     </script>
+
 </body>
 </html>
