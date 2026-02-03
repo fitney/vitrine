@@ -3,45 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Aplicação</title>
+    <title>Carregando Loja...</title>
     <style>
-        /* Remove margens e barras de rolagem da página "mãe" */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; 
-            background-color: #f0f0f0; /* Cor de fundo enquanto carrega */
-        }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
         
-        /* O iframe ocupa toda a tela */
-        iframe {
-            display: block;
+        #sistemaFrame {
             width: 100%;
-            height: 100vh; /* 100% da altura da visão */
+            height: 100vh;
             border: none;
+            opacity: 0; 
+            transition: opacity 0.5s;
         }
 
-        /* Opcional: Um texto de carregamento simples */
-        .loading {
+        #loadingMsg {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-family: sans-serif;
-            color: #666;
-            z-index: -1; /* Fica atrás do iframe */
+            text-align: center;
+        }
+        
+        .btn-fallback {
+            display: none;
+            background-color: #4285f4;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="loading">Carregando sistema...</div>
+    <div id="loadingMsg">
+        <h2 id="statusTexto">Conectando ao sistema...</h2>
+        <p>Verificando suas credenciais Google.</p>
+        
+        <a id="btnErro" class="btn-fallback" href="#" target="_top">
+            CLIQUE PARA ENTRAR AGORA
+        </a>
+    </div>
 
-    <iframe 
-        src="https://script.google.com/macros/s/AKfycbxucYat2LC0peR-dOTQUQERTBeQp3pkMo1l3LKVku8Phk02a_OduezDlBOluFPHKSXZjQ/exec?authuser=0"
-        allowfullscreen>
-    </iframe>
+    <iframe id="sistemaFrame" allowfullscreen></iframe>
+
+    <script>
+       
+        var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbxp1V5G5K-sbYiZ2-gXG61sm1JDEv5KohvDlcCSD-f7qkEz9JXmkMa6r3T64U1FdgJjRg/exec";
+        var iframe = document.getElementById('sistemaFrame');
+        var statusTexto = document.getElementById('statusTexto');
+        var btnErro = document.getElementById('btnErro');
+        
+        // 1. Injeta o link no Iframe
+        iframe.src = URL_DO_SCRIPT;
+
+        // 2. Prepara o link blindado (AccountChooser)
+        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
+        btnErro.href = linkBlindado;
+
+        var carregouSucesso = false;
+
+        // 3. OUVINTE: Espera o "Grito" de sucesso do GAS
+        window.addEventListener('message', function(e) {
+            if (e.data === "APP_CARREGADO_SUCESSO") {
+                carregouSucesso = true;
+                console.log("Sucesso! O App rodou no Iframe.");
+                iframe.style.opacity = "1";
+                document.getElementById('loadingMsg').style.display = 'none';
+            }
+        });
+
+        // 4. TEMPORIZADOR DE SEGURANÇA (4 Segundos)
+        setTimeout(function() {
+            if (!carregouSucesso) {
+                console.log("Falha no Iframe. Ativando redirecionamento.");
+                statusTexto.innerText = "Redirecionando para login seguro...";
+                document.querySelector('p').innerText = "Caso não redirecione, clique abaixo.";
+                iframe.style.display = 'none';
+                btnErro.style.display = "inline-block";
+                
+                // Redireciona automaticamente para o AccountChooser
+                window.location.replace(linkBlindado);
+            }
+        }, 2000); 
+    </script>
 
 </body>
 </html>
