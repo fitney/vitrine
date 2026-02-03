@@ -6,76 +6,32 @@
     <title>Vitrine Fitney</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
-        
-        #sistemaFrame {
-            width: 100%;
-            height: 100vh;
-            border: none;
-            opacity: 0; 
-            transition: opacity 0.5s;
-        }
-
-        #loadingMsg {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 90%;
-        }
-        
-        .btn-fallback {
-            display: none;
-            background-color: #4285f4;
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-
-        /* Console de Debug fixo no topo */
-        #debugConsole {
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; 
-            background: rgba(0,0,0,0.8); 
-            color: #0f0; 
-            font-family: monospace; 
-            font-size: 10px; 
-            z-index: 9999; 
-            max-height: 100px; 
-            overflow-y: auto; 
-            pointer-events: none;
-            padding: 5px;
-        }
+        #sistemaFrame { width: 100%; height: 100vh; border: none; opacity: 0; transition: opacity 0.5s; }
+        #loadingMsg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; }
+        .btn-fallback { display: none; background-color: #4285f4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+        #debugConsole { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace; font-size: 10px; z-index: 9999; max-height: 100px; overflow-y: auto; pointer-events: none; padding: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="debugConsole">
-        [DEBUG LOG ATIVO]<br>
-    </div>
+    <div id="debugConsole">[DEBUG LOG ATIVO]<br></div>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando Vitrine...</h2>
-        <p id="descTexto">Aguarde um instante.</p>
-        <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR NA LOJA</a>
+        <h2 id="statusTexto">Carregando Vitrine2...</h2>
+        <p id="descTexto">Sincronizando com sua conta Google.</p>
+        <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR COM GOOGLE</a>
     </div>
 
     <iframe id="sistemaFrame" allowfullscreen></iframe>
 
     <script>
-        // 1. CONFIGURAÇÃO - LINK EXTRAÍDO DA SUA PLANILHA
+        // LINK PURO - SEM PARÂMETROS EXTRAS
         var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
         
         var iframe = document.getElementById('sistemaFrame');
         var loadingDiv = document.getElementById('loadingMsg');
-        var statusTexto = document.getElementById('statusTexto');
-        var descTexto = document.getElementById('descTexto');
         var btnErro = document.getElementById('btnErro');
         var debugDiv = document.getElementById('debugConsole');
-        
         var carregouSucesso = false;
 
         function logDebug(msg) {
@@ -84,28 +40,25 @@
             console.log(msg);
         }
 
-        logDebug("Iniciando vitrine...");
-
-        // 2. VERIFICAÇÃO DE MEMÓRIA (LocalStorage)
+        logDebug("Iniciando limpeza de sessão...");
         var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
-        logDebug("Histórico de sucesso: " + (usuarioJaLogado || "vazio"));
 
-        // 3. PREPARA LINKS (Sem parâmetros pli/authuser)
+        // 1. TENTA O ACESSO DIRETO
         iframe.src = URL_DO_SCRIPT;
+
+        // 2. LINK DE LOGIN SEGURO (AccountChooser simples para evitar o erro 400)
         var linkLogin = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
         btnErro.href = linkLogin;
 
-        // --- MODO RÁPIDO PARA USUÁRIOS RECORRENTES ---
         if (usuarioJaLogado === "sim") {
-            logDebug("Usuário antigo detectado. Abrindo Iframe.");
+            logDebug("Usuário recorrente. Abrindo Iframe.");
             iframe.style.opacity = "1";
             loadingDiv.style.display = 'none';
         }
 
-        // --- OUVINTE DE MENSAGEM (POSTMESSAGE) ---
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
-                logDebug("SINAL DE SUCESSO: Aplicativo carregado no Iframe.");
+                logDebug("SUCESSO: Script Google respondeu.");
                 carregouSucesso = true;
                 localStorage.setItem("APP_GAS_SUCESSO", "sim");
                 iframe.style.opacity = "1";
@@ -113,32 +66,25 @@
             }
         });
 
-        // --- MONITORAMENTO DE 4 SEGUNDOS ---
+        // 3. MONITORAMENTO DE 4 SEGUNDOS
         setTimeout(function() {
             if (!carregouSucesso) {
-                logDebug("Timeout de 4s atingido.");
+                logDebug("Acesso direto falhou após 4s.");
                 
                 if (usuarioJaLogado === "sim") {
-                    logDebug("Falha em usuário recorrente. Sessão expirada?");
+                    logDebug("Sessão antiga expirada. Mostrando botão.");
                     iframe.style.display = "none"; 
                     loadingDiv.style.display = 'block';
-                    statusTexto.innerText = "Sessão Expirada";
-                    descTexto.innerText = "Clique abaixo para validar seu acesso.";
+                    document.getElementById('statusTexto').innerText = "Acesso Expirado";
                     btnErro.style.display = "inline-block";
                     localStorage.removeItem("APP_GAS_SUCESSO");
                 } else {
-                    logDebug("Acesso direto falhou. Iniciando login Google.");
-                    iframe.style.display = 'none';
-                    btnErro.style.display = "inline-block";
-                    
-                    // REDIRECIONAMENTO ÚNICO: Tira do GitHub e manda pro Google oficial
+                    logDebug("Redirecionando para login limpo...");
+                    // Redireciona UMA VEZ para o AccountChooser sem os parâmetros que causaram o loop
                     window.location.replace(linkLogin);
                 }
-            } else {
-                logDebug("Timer encerrado: Loja já estava visível.");
             }
         }, 4000); 
     </script>
-
 </body>
 </html>
