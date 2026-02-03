@@ -38,7 +38,7 @@
 <body>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando Sistema...</h2>
+        <h2 id="statusTexto">Carregando Loja Virtual...</h2>
         <p id="descTexto">Aguarde um instante.</p>
         <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR NA LOJA</a>
     </div>
@@ -117,4 +117,16 @@
         }, 4000); // Exatos 4 segundos conforme solicitado
     </script>
 </body>
+<div id="debugConsole" style="position:fixed; top:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; font-family:monospace; font-size:10px; z-index:9999; max-height:100px; overflow-y:auto; pointer-events:none;">
+    [DEBUG LOG ATIVO]<br>
+</div>
+
+<script>
+    function logDebug(msg) {
+        var consoleDiv = document.getElementById('debugConsole');
+        consoleDiv.innerHTML += "> " + msg + "<br>";
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+    // Substitua os console.log do seu script por logDebug
+</script>
 </html>
