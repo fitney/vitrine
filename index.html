@@ -8,7 +8,7 @@
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
         #sistemaFrame { width: 100%; height: 100vh; border: none; opacity: 0; transition: opacity 0.5s; }
         #loadingMsg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 90%; }
-        .btn-fallback { display: none; background-color: #4285f4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+        .btn-portal { display: none; background-color: #4285f4; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; cursor: pointer; }
         #debugConsole { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace; font-size: 10px; z-index: 9999; max-height: 100px; overflow-y: auto; pointer-events: none; padding: 5px; }
     </style>
 </head>
@@ -17,74 +17,67 @@
     <div id="debugConsole">[DEBUG LOG ATIVO]<br></div>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Carregando Vitrine2...</h2>
-        <p id="descTexto">Sincronizando com sua conta Google.</p>
-        <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR COM GOOGLE</a>
+        <h2 id="statusTexto">Sincronizando Vitrine4...</h2>
+        <p id="descTexto">Validando sua conta com o servidor Google.</p>
+        <a id="btnPortal" class="btn-portal" href="#" target="_top">ENTRAR NA VITRINE</a>
     </div>
 
-    <iframe id="sistemaFrame" allowfullscreen></iframe>
+    <iframe id="sistemaFrame"></iframe>
 
     <script>
-        // LINK PURO - SEM PARÂMETROS EXTRAS
-        var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
-        
+        // 1. LINKS DE CONFIGURAÇÃO
+        var URL_GAS = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
+        var URL_GITHUB = window.location.origin + window.location.pathname; 
+
         var iframe = document.getElementById('sistemaFrame');
         var loadingDiv = document.getElementById('loadingMsg');
-        var btnErro = document.getElementById('btnErro');
+        var btnPortal = document.getElementById('btnPortal');
         var debugDiv = document.getElementById('debugConsole');
         var carregouSucesso = false;
 
-        function logDebug(msg) {
-            debugDiv.innerHTML += "> " + msg + "<br>";
-            debugDiv.scrollTop = debugDiv.scrollHeight;
-            console.log(msg);
-        }
+        function log(m) { debugDiv.innerHTML += "> " + m + "<br>"; debugDiv.scrollTop = debugDiv.scrollHeight; }
 
-        logDebug("Iniciando limpeza de sessão...");
-        var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
+        // 2. PREPARA O LINK DE LOGIN COM RETORNO PARA O GITHUB
+        // O "continue" aponta de volta para cá, com um marcador de retorno
+        var linkAutenticacao = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_GITHUB + "?retorno=sucesso");
+        btnPortal.href = linkAutenticacao;
 
-        // 1. TENTA O ACESSO DIRETO
-        iframe.src = URL_DO_SCRIPT;
+        log("Tentando conexão direta...");
 
-        // 2. LINK DE LOGIN SEGURO (AccountChooser simples para evitar o erro 400)
-        var linkLogin = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
-        btnErro.href = linkLogin;
+        // 3. TENTA CARREGAR O IFRAME
+        iframe.src = URL_GAS;
 
-        if (usuarioJaLogado === "sim") {
-            logDebug("Usuário recorrente. Abrindo Iframe.");
-            iframe.style.opacity = "1";
-            loadingDiv.style.display = 'none';
-        }
-
+        // OUVINTE: Aguarda o sinal de sucesso vindo do Apps Script
         window.addEventListener('message', function(e) {
             if (e.data === "APP_CARREGADO_SUCESSO") {
-                logDebug("SUCESSO: Script Google respondeu.");
+                log("SUCESSO: Sessão validada pelo Google.");
                 carregouSucesso = true;
-                localStorage.setItem("APP_GAS_SUCESSO", "sim");
                 iframe.style.opacity = "1";
                 loadingDiv.style.display = 'none';
+                localStorage.setItem("APP_GAS_SUCESSO", "sim");
             }
         });
 
-        // 3. MONITORAMENTO DE 4 SEGUNDOS
+        // 4. MONITORAMENTO ÚNICO DE 4 SEGUNDOS
         setTimeout(function() {
             if (!carregouSucesso) {
-                logDebug("Acesso direto falhou após 4s.");
-                
-                if (usuarioJaLogado === "sim") {
-                    logDebug("Sessão antiga expirada. Mostrando botão.");
-                    iframe.style.display = "none"; 
-                    loadingDiv.style.display = 'block';
-                    document.getElementById('statusTexto').innerText = "Acesso Expirado";
-                    btnErro.style.display = "inline-block";
+                log("Acesso direto falhou (provável bloqueio de cookies).");
+
+                // Se já voltamos do Google e continua falhando, o navegador é muito restritivo
+                if (window.location.search.includes("retorno=sucesso")) {
+                    log("Falha persistente após retorno. Mostrando botão manual.");
+                    document.getElementById('statusTexto').innerText = "Acesso Interrompido";
+                    document.getElementById('descTexto').innerText = "Seu navegador está bloqueando o carregamento interno.";
+                    btnPortal.style.display = "inline-block";
+                    // Tenta limpar a memória para um reset forçado
                     localStorage.removeItem("APP_GAS_SUCESSO");
                 } else {
-                    logDebug("Redirecionando para login limpo...");
-                    // Redireciona UMA VEZ para o AccountChooser sem os parâmetros que causaram o loop
-                    window.location.replace(linkLogin);
+                    // PRIMEIRA TENTATIVA: Faz o "salto" no Google para autenticar e volta
+                    log("Redirecionando para validação de conta...");
+                    window.location.replace(linkAutenticacao);
                 }
             }
-        }, 4000); 
+        }, 4000);
     </script>
 </body>
 </html>
