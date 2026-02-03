@@ -11,7 +11,7 @@
             width: 100%;
             height: 100vh;
             border: none;
-            opacity: 0; /* Começa invisível por segurança */
+            opacity: 0; 
             transition: opacity 0.5s;
         }
 
@@ -50,6 +50,9 @@
         // CONFIGURAÇÃO
         // =================================================================
         var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
+        
+        // Forçando a URL com os parâmetros de sessão que você identificou como funcionais
+        var URL_AUTENTICADA = URL_DO_SCRIPT + "?pli=1&authuser=0";
         // =================================================================
 
         var iframe = document.getElementById('sistemaFrame');
@@ -63,13 +66,12 @@
         // Verifica se o usuário já conseguiu entrar com sucesso neste navegador antes
         var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
 
-        // Configura links
+        // Configura links: O iframe tenta o link normal, o botão/redirecionamento força a sessão 0
         iframe.src = URL_DO_SCRIPT;
-        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
+        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_AUTENTICADA);
         btnErro.href = linkBlindado;
 
         // --- LÓGICA DE VELOCIDADE ---
-        // Se o usuário já tem a flag de sucesso, assumimos que vai dar certo e mostramos logo.
         if (usuarioJaLogado === "sim") {
             console.log("Usuário recorrente. Modo rápido ativado.");
             iframe.style.opacity = "1";
@@ -78,29 +80,23 @@
 
         // --- OUVINTE DE SUCESSO ---
         window.addEventListener('message', function(e) {
-            // Esse código só roda se o Iframe carregar bonitinho dentro da página
             if (e.data === "APP_CARREGADO_SUCESSO") {
                 carregouSucesso = true;
                 
-                // CRIA A FLAG: Só acontece aqui, no sucesso do link padrão
+                // Marca a flag apenas no acesso direto bem-sucedido
                 localStorage.setItem("APP_GAS_SUCESSO", "sim");
 
-                // Garante que a tela está visível
                 iframe.style.opacity = "1";
                 loadingDiv.style.display = 'none';
             }
         });
 
-        // --- SEGURANÇA CONTRA FALHAS (8 Segundos) ---
+        // --- SEGURANÇA CONTRA FALHAS (Ajustado para 4 Segundos) ---
         setTimeout(function() {
             if (!carregouSucesso) {
-                // Se o tempo acabou e não carregou...
-                
                 if (usuarioJaLogado === "sim") {
-                    // CENÁRIO A: Usuário antigo, mas o login caiu (Sessão expirada)
-                    // Não redirecionamos na cara dele, apenas mostramos o botão.
-                    console.log("Sessão recorrente expirou ou está lenta.");
-                    iframe.style.opacity = "0"; // Esconde o erro cinza
+                    console.log("Sessão recorrente expirou.");
+                    iframe.style.opacity = "0";
                     iframe.style.display = "none"; 
                     
                     loadingDiv.style.display = 'block';
@@ -108,19 +104,17 @@
                     descTexto.innerText = "Precisamos validar seu acesso novamente.";
                     btnErro.style.display = "inline-block";
                     
-                    // Removemos a flag pois falhou agora
                     localStorage.removeItem("APP_GAS_SUCESSO");
-                    
                 } else {
-                    // CENÁRIO B: Usuário novo ou com erro de multi-login
-                    // Redirecionamento automático para corrigir
-                    console.log("Erro inicial. Redirecionando para blindagem.");
+                    console.log("Erro inicial ou multi-login. Redirecionando para URL autenticada.");
                     iframe.style.display = 'none';
                     btnErro.style.display = "inline-block";
+                    
+                    // Redireciona automaticamente para o AccountChooser com o link ?pli=1&authuser=0
                     window.location.replace(linkBlindado);
                 }
             }
-        }, 4000); 
+        }, 4000); // Exatos 4 segundos conforme solicitado
     </script>
 </body>
 </html>
