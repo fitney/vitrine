@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VITRINE FITNEY</title>
+    <title>Vitrine Fitney</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif;}
         
@@ -11,7 +11,7 @@
             width: 100%;
             height: 100vh;
             border: none;
-            opacity: 0; 
+            opacity: 0; /* Começa invisível por segurança */
             transition: opacity 0.5s;
         }
 
@@ -20,7 +20,7 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            width: 80%;
+            width: 90%;
         }
         
         .btn-fallback {
@@ -38,86 +38,89 @@
 <body>
 
     <div id="loadingMsg">
-        <h2 id="statusTexto">Buscando servidor...</h2>
-        <p id="descTexto">Obtendo endereço atualizado.</p>
-        
-        <a id="btnErro" class="btn-fallback" href="#" target="_top">
-            ACESSAR SISTEMA
-        </a>
+        <h2 id="statusTexto">Carregando Sistema...</h2>
+        <p id="descTexto">Aguarde um instante.</p>
+        <a id="btnErro" class="btn-fallback" href="#" target="_top">ENTRAR NA LOJA</a>
     </div>
 
     <iframe id="sistemaFrame" allowfullscreen></iframe>
 
     <script>
+        // =================================================================
+        // CONFIGURAÇÃO
+        // =================================================================
+        var URL_DO_SCRIPT = "https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
+        // =================================================================
 
-        var URL_PLANILHA_CSV = "https://https://script.google.com/macros/s/AKfycbyj-uHhX-VlhJZJdAZUnclGWk07EaQN8xwHN8YeZ6Ksd00a373NPtsvh6rSBMcBeV-85g/exec";
         var iframe = document.getElementById('sistemaFrame');
+        var loadingDiv = document.getElementById('loadingMsg');
         var statusTexto = document.getElementById('statusTexto');
         var descTexto = document.getElementById('descTexto');
         var btnErro = document.getElementById('btnErro');
+        
         var carregouSucesso = false;
+        
+        // Verifica se o usuário já conseguiu entrar com sucesso neste navegador antes
+        var usuarioJaLogado = localStorage.getItem("APP_GAS_SUCESSO");
 
-        // Função principal que inicia tudo
-        async function iniciarSistema() {
-            try {
-                // 1. Busca o link dentro da planilha
-                const resposta = await fetch(URL_PLANILHA_CSV);
-                let urlDoGas = await resposta.text();
-                
-                // Limpa quebras de linha ou espaços que possam vir da planilha
-                urlDoGas = urlDoGas.trim();
+        // Configura links
+        iframe.src = URL_DO_SCRIPT;
+        var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(URL_DO_SCRIPT);
+        btnErro.href = linkBlindado;
 
-                console.log("Link obtido da planilha:", urlDoGas);
-
-                // 2. Atualiza a tela e o Iframe
-                statusTexto.innerText = "Carregando loja virtual...";
-                descTexto.innerText = "";
-                
-                // Injeta o link no iframe
-                iframe.src = urlDoGas;
-
-                // Prepara o link de fallback (AccountChooser)
-                var linkBlindado = "https://accounts.google.com/AccountChooser?service=wise&continue=" + encodeURIComponent(urlDoGas);
-                btnErro.href = linkBlindado;
-
-                // 3. Inicia o Cronômetro de Segurança (8 segundos agora)
-                setTimeout(function() {
-                    if (!carregouSucesso) {
-                        console.log("Timeout: App não respondeu. Ativando fallback.");
-                        ativarModoErro(linkBlindado);
-                    }
-                }, 4000);
-
-            } catch (erro) {
-                console.error("Erro ao ler a planilha:", erro);
-                statusTexto.innerText = "Erro de configuração.";
-                descTexto.innerText = "Não foi possível obter o link do sistema.";
-            }
+        // --- LÓGICA DE VELOCIDADE ---
+        // Se o usuário já tem a flag de sucesso, assumimos que vai dar certo e mostramos logo.
+        if (usuarioJaLogado === "sim") {
+            console.log("Usuário recorrente. Modo rápido ativado.");
+            iframe.style.opacity = "1";
+            loadingDiv.style.display = 'none';
         }
 
-        function ativarModoErro(linkDestino) {
-            statusTexto.innerText = "Redirecionando para login seguro...";
-            descTexto.innerText = "Multi-login detectado. Clique abaixo se não redirecionar.";
-            iframe.style.display = 'none';
-            btnErro.style.display = "inline-block";
-            
-            // Tenta redirecionar automaticamente
-            window.location.replace(linkDestino);
-        }
-
-        // 4. OUVINTE: Espera o "Grito" de sucesso do GAS
+        // --- OUVINTE DE SUCESSO ---
         window.addEventListener('message', function(e) {
+            // Esse código só roda se o Iframe carregar bonitinho dentro da página
             if (e.data === "APP_CARREGADO_SUCESSO") {
                 carregouSucesso = true;
-                console.log("Sucesso! O App carregou.");
+                
+                // CRIA A FLAG: Só acontece aqui, no sucesso do link padrão
+                localStorage.setItem("APP_GAS_SUCESSO", "sim");
+
+                // Garante que a tela está visível
                 iframe.style.opacity = "1";
-                document.getElementById('loadingMsg').style.display = 'none';
+                loadingDiv.style.display = 'none';
             }
         });
 
-        // Dispara o processo ao carregar a página
-        iniciarSistema();
-
+        // --- SEGURANÇA CONTRA FALHAS (8 Segundos) ---
+        setTimeout(function() {
+            if (!carregouSucesso) {
+                // Se o tempo acabou e não carregou...
+                
+                if (usuarioJaLogado === "sim") {
+                    // CENÁRIO A: Usuário antigo, mas o login caiu (Sessão expirada)
+                    // Não redirecionamos na cara dele, apenas mostramos o botão.
+                    console.log("Sessão recorrente expirou ou está lenta.");
+                    iframe.style.opacity = "0"; // Esconde o erro cinza
+                    iframe.style.display = "none"; 
+                    
+                    loadingDiv.style.display = 'block';
+                    statusTexto.innerText = "Sessão Expirada";
+                    descTexto.innerText = "Precisamos validar seu acesso novamente.";
+                    btnErro.style.display = "inline-block";
+                    
+                    // Removemos a flag pois falhou agora
+                    localStorage.removeItem("APP_GAS_SUCESSO");
+                    
+                } else {
+                    // CENÁRIO B: Usuário novo ou com erro de multi-login
+                    // Redirecionamento automático para corrigir
+                    console.log("Erro inicial. Redirecionando para blindagem.");
+                    iframe.style.display = 'none';
+                    btnErro.style.display = "inline-block";
+                    window.location.replace(linkBlindado);
+                }
+            }
+        }, 4000); 
     </script>
 </body>
 </html>
