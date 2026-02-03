@@ -1,2 +1,47 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Aplicação</title>
+    <style>
+        /* Remove margens e barras de rolagem da página "mãe" */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; 
+            background-color: #f0f0f0; /* Cor de fundo enquanto carrega */
+        }
+        
+        /* O iframe ocupa toda a tela */
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100vh; /* 100% da altura da visão */
+            border: none;
+        }
+
+        /* Opcional: Um texto de carregamento simples */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: sans-serif;
+            color: #666;
+            z-index: -1; /* Fica atrás do iframe */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading">Carregando sistema...</div>
+
+    <iframe 
+        src="https://script.google.com/macros/s/AKfycbxp1V5G5K-sbYiZ2-gXG61sm1JDEv5KohvDlcCSD-f7qkEz9JXmkMa6r3T64U1FdgJjRg/exec?authuser=0"
+        allowfullscreen>
+    </iframe>
+
+</body>
 </html>
