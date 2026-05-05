@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitrine Fitney</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+<div id="preloader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
+  
+  <video id="vid-preloader" 
+         autoplay 
+         loop 
+         muted 
+         playsinline 
+         style="max-width: 250px; height: auto; margin-bottom: 20px; border-radius: 10px;">
+    <source src="https://fitney.com.br/img/preloader.mp4" type="video/mp4">
+    Seu navegador não suporta o carregamento de vídeos.
+  </video>
+  
+  <div class="text-center">
+    <h5 class="fw-bold" style="color: #000;">MONTANDO SEU LOOK DE HOJE...</h5>
+    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+  </div>
+
+  <div id="msg-timeout" class="d-none text-center mt-3 p-3">
+    <p class="text-danger small">A conexão está um pouco lenta hoje...</p>
+    <button onclick="window.location.reload()" class="btn btn-sm btn-dark rounded-pill px-4">TENTAR NOVAMENTE</button>
+  </div>
+</div>
+
+    <div class="d-flex w-100" id="layout-global">
+      <div id="conteudo-principal" class="flex-grow-1 overflow-hidden">
+<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="z-index: 1100; height: 60px; padding: 0;">
+  <div class="container d-flex align-items-center justify-content-between gap-1 flex-nowrap"> 
+    
+    <a class="navbar-brand me-0 flex-shrink-0" href="javascript:void(0)" onclick="voltarParaHome()">
+      <img id="logo-loja" src="" alt="Logo" height="30" style="object-fit: contain;">
+    </a>
+
+    <div class="flex-grow-1 px-1" style="max-width: 600px; min-width: 0;">
+      <div class="input-group rounded-pill bg-light border border-secondary-subtle overflow-hidden flex-nowrap">
+        <input type="text" id="input-busca-topo" class="form-control border-0 bg-light ps-3 py-1" 
+               placeholder="Buscar..." onkeyup="realizarBuscaTopo(this.value)" 
+               style="font-size: 0.85rem; min-width: 0; box-shadow: none;">
+        <button class="btn btn-light border-0 text-secondary px-2" type="button" onclick="focarBusca()">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn btn-white border-0 position-relative p-0 flex-shrink-0" 
+            type="button" 
+            onclick="gerenciarCliqueCarrinho()">
+      <i class="bi bi-cart3 fs-3 text-dark"></i>
+      <span id="cart-count" class="badge-cart" style="display: none;"></span>
+    </button>
+    
+  </div>
+</nav>
+        <div class="container py-3 py-lg-5">
+          <div class="container-fluid px-0 mb-5">
+            <div id="banner-home" class="banner-hero rounded-4 d-flex align-items-center justify-content-center text-white text-center shadow" 
+                style="background-size: cover; background-position: center; height: 300px; background-color: #333; position: relative; overflow: hidden;">
+              
+              <div style="z-index: 2;">
+                <h1 id="banner-titulo" class="fw-bold display-4 text-uppercase">Coleção 2026</h1>
+                <p id="banner-subtitulo" class="lead">Estilo e conforto em cada detalhe</p>
+              </div>
+            </div>
+          </div>
+    
+          <div class="row">
+            
+            <div class="col-lg-3 mb-4">
+              
+              <div class="sidebar-filtros sticky-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="offcanvasFiltros" aria-labelledby="offcanvasFiltrosLabel">
+                
+                <div class="offcanvas-header d-lg-none border-bottom p-3">
+                  <h5 class="offcanvas-title fw-bold" id="offcanvasFiltrosLabel">Filtros</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasFiltros" aria-label="Close"></button>
+                </div>
+
+                <div class="offcanvas-body d-flex flex-column px-0 px-lg-0 p-3">
+                
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0 d-none d-lg-block">Filtros</h5>
+                    <button class="btn btn-link btn-sm text-decoration-none p-0 ms-auto" onclick="limparTodosFiltros()">Limpar Tudo</button>
+                  </div>
+
+                  <div class="filter-section border-bottom mb-3 pb-2">
+                    <div class="filter-title fw-bold small text-uppercase mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#col-categoria">
+                      Categoria <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse show" id="col-categoria">
+                      <div id="list-categoria" class="filter-content ps-1"></div>
+                    </div>
+                  </div>
+
+                  <div class="filter-section border-bottom mb-3 pb-2">
+                    <div class="filter-title fw-bold small text-uppercase mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#col-sub">
+                      Subcategoria <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse show" id="col-sub">
+                      <div id="list-subcategoria" class="filter-content ps-1"></div>
+                    </div>
+                  </div>
+
+                  <div class="filter-section border-bottom mb-3 pb-2">
+                    <div class="filter-title fw-bold small text-uppercase mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#col-cor">
+                      Cores <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse show" id="col-cor">
+                      <div id="list-cor" class="filter-content ps-1"></div>
+                    </div>
+                  </div>
+
+                  <div class="filter-section mb-3">
+                    <div class="filter-title fw-bold small text-uppercase mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#col-tam">
+                      Tamanhos <span class="float-end">▼</span>
+                    </div>
+                    <div class="collapse show" id="col-tam">
+                      <div id="list-tamanho" class="filter-content ps-1"></div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-auto d-lg-none pt-3 border-top bg-white">
+                    <button class="btn btn-dark w-100 py-3 fw-bold rounded-pill" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasFiltros">
+                        VER RESULTADOS
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-9">
+              <div class="sticky-top d-lg-none bg-white shadow-sm mb-3 py-2 px-2" 
+                style="top: 55px; z-index: 1020;">
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-white border shadow-sm p-2 rounded-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFiltros">
+                    <i class="bi bi-sliders2 fs-5"></i>
+                  </button>
+                  <div id="container-chips-categorias" class="d-flex overflow-auto gap-2 py-1 scroll-invisivel flex-grow-1">
+                    </div>
+                </div>
+              </div>
+              <div id="view-lista">
+                <div id="vitrine" class="row g-4"></div>
+              </div>
+
+              <div id="view-produto" style="display: none;">
+                <div class="container" style="max-width: 960px; margin: 0 auto;">
+                  <div id="pdp-wrapper" class="row g-4 mt-2"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+<footer class="footer-custom pt-5 pb-4 mt-5">
+  <div class="container px-4 px-lg-5">
+    <div class="row">
+      <div class="col-md-8 mb-4 text-center text-md-start">
+        <h5 class="fw-bold mb-3">Sobre Nós</h5>
+        <p id="footer-sobre" class="small">
+          Carregando informações...
+        </p>
+      </div>
+
+      <div class="col-md-4 mb-4 text-center text-md-end">
+        <div class="mb-4">
+          <h5 class="fw-bold mb-2">Siga-nos</h5>
+          <div class="d-flex justify-content-center justify-content-md-end">
+            <a id="footer-insta" href="#" target="_blank" class="text-decoration-none d-flex align-items-center gap-2">
+              <i class="bi bi-instagram"></i>
+              <span class="small colorlink">@fitney_oficial</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h5 class="fw-bold mb-3">Contato</h5>
+          <p id="footer-email" class="small mb-1">...</p>
+          <p id="footer-whatsapp" class="small">...</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="border-dark mt-4" style="opacity: 0.1;">
+    <p class="text-center small mb-0" style="color: #000; opacity: 0.8;">© 2026 Todos os direitos reservados.</p>
+  </div>
+</footer>
+      </div>
+        <div id="carrinho-global-lateral" style="display: none;">
+          <div class="carrinho-sticky-wrapper">
+            
+            <div class="ewc-header-static">
+              <span class="ewc-label">Subtotal</span>
+              <div id="total-carrinho-fixo">R$ 0,00</div>
+              
+              <button class="btn-modern-wa-desktop" onclick="enviarPedidoWhatsApp()">
+                <i class="bi bi-whatsapp"></i>
+                <span>Enviar pedido</span>
+              </button>
+            </div>
+
+            <div id="itens-carrinho-fixo"></div>
+            
+          </div>
+        </div>
+
+    </div>
+
+    <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="offcanvasCarrinho" aria-labelledby="offcanvasCarrinhoLabel" style="width: 320px;">
+<div class="offcanvas-header border-bottom shadow-sm d-block text-center position-relative py-4">
+    <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+
+    <div class="mb-1">
+        <span class="subtotal-label">Subtotal</span>
+    </div>
+    <div class="mb-3">
+        <span class="fw-bold" id="total-carrinho-mobile">R$ 0,00</span>
+    </div>
+
+    <button class="btn-modern-wa" onclick="enviarPedidoWhatsApp()">
+        <i class="bi bi-whatsapp fs-5"></i>
+        <span>Enviar Pedido</span>
+    </button>
+</div>
+      
+      <div class="offcanvas-body d-flex flex-column bg-light">
+        <div id="itens-carrinho-mobile" class="flex-grow-1 overflow-auto">
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Link para o arquivo JavaScript externo -->
+    <script src="script.js"></script>
+
+  </body>
+</html>

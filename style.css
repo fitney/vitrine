@@ -1,0 +1,639 @@
+  /* =================================================================================
+     1. ESTRUTURA GLOBAL E LAYOUT (MERGE: SITE + CARRINHO LATERAL)
+     ================================================================================= */
+  body { 
+    background-color: #f8f9fa; 
+    font-family: 'Segoe UI', 'Amazon Ember', Arial, sans-serif; 
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  /* Container pai que racha a tela em dois */
+  #layout-global {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    align-items: flex-start;
+  }
+
+  /* Coluna 1: O Site (Flexível) */
+  #conteudo-principal {
+    flex: 1;
+    min-width: 0;
+    background-color: #f8f9fa;
+  }
+
+  /* IMPORTANTE: Remova restrições dos pais */
+  #conteudo-principal, #layout-global {
+    overflow: visible !important; /* Se estiver 'hidden' ou 'auto', o sticky morre */
+  }
+
+  /* Coluna 2: Carrinho Lateral Estrito (129px) - ESTILO AMAZON */
+  #carrinho-global-lateral {
+    width: 129px !important;
+    min-width: 129px !important;
+    max-width: 129px !important;
+    background-color: #fff;
+    border-left: 1px solid #DDD;
+    z-index: 1030;
+    display: none; 
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .carrinho-sticky-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px 6px;
+  }
+
+  /* =================================================================================
+     2. FILTROS E SIDEBAR (RESTAURADO DA VERSÃO ANTIGA)
+     ================================================================================= */
+  .sidebar-filtros { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 15px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: -webkit-sticky;
+    position: sticky;
+    top: 20px; 
+    max-height: calc(100vh - 40px); 
+    overflow-y: auto; 
+  }
+
+  .filter-section { border-bottom: 1px solid #eee; padding: 15px 0; }
+  .filter-title { 
+    font-size: 0.9rem; font-weight: bold; text-transform: uppercase; 
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .filter-content { padding-top: 10px; max-height: 250px; overflow-y: auto; }
+  
+  /* Checkboxes Customizados */
+  .checkbox-filter { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; cursor: pointer; }
+  .checkbox-filter input { margin-right: 10px; width: 16px; height: 16px; cursor: pointer; }
+
+  /* =================================================================================
+     3. VITRINE E CARDS (ESTILO KYTE + HOVER)
+     ================================================================================= */
+  .card-produto { 
+    border: none; border-radius: 15px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+    background: #fff; transition: 0.3s; 
+  }
+  .card-produto:hover { transform: translateY(-5px); }
+
+  .card-produto .ratio img { object-fit: cover; width: 100%; height: 100%; }
+
+  /* Botões de Categoria (Chips) no Topo */
+  .btn-chip-cat {
+    background-color: #fff; border: 1px solid #dee2e6; color: #333;
+    font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+    white-space: nowrap; border-radius: 4px; padding: 0.4rem 1rem;
+    transition: all 0.2s;
+  }
+  .btn-chip-cat:hover, .btn-chip-cat.active { border-color: #000; color: #000; background-color: #f8f9fa; }
+
+  .scroll-invisivel { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
+  .scroll-invisivel::-webkit-scrollbar { display: none; }
+
+  /* =================================================================================
+     4. BOTÕES DE VARIAÇÃO E LÓGICA DE ESTOQUE (RESTAURADO)
+     ================================================================================= */
+  .btn-opcao { margin: 2px; font-size: 0.8rem; border-radius: 8px; }
+  
+  /* Efeito Visual para Item Esgotado (O "X" diagonal) */
+  .btn-check:disabled + .btn-opcao {
+    position: relative;
+    color: #ccc !important;
+    border-color: #ddd !important;
+    background-color: #f9f9f9 !important;
+    cursor: not-allowed;
+    overflow: hidden;
+  }
+  .btn-check:disabled + .btn-opcao::after {
+    content: ""; position: absolute; top: 50%; left: -10%; width: 120%; height: 1px;
+    background: #ccc; transform: rotate(135deg);
+  }
+
+  /* =================================================================================
+     5. MODAL DE ZOOM PROFISSIONAL (RESTAURADO + BARRA PRETA)
+     ================================================================================= */
+  #modalZoom .modal-content { background-color: #000; border: none; height: 100vh; }
+
+  /* 2. Força o Modal de Zoom a ser a camada mais alta de todas */
+  #modalZoom, .modal-fullscreen {
+    z-index: 2000 !important; 
+  }
+
+  /* 3. Garante que o fundo escuro do modal também suba de nível */
+  .modal-backdrop {
+    z-index: 1040 !important;
+  }
+
+  #modalZoom .img-zoom-container {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; padding-bottom: 80px !important;
+  }
+
+  #modalZoom img {
+    max-height: 82vh !important; max-width: 100vw; object-fit: contain;
+    transition: transform 0.1s ease-out; cursor: grab; transform-origin: center center;
+  }
+  #modalZoom img.grabbing { cursor: grabbing; transition: none; }
+
+  /* Botão de Fechar (O "X" no topo) */
+  .btn-close-custom {
+    position: absolute; top: 20px; right: 20px; z-index: 1080;
+    background: none; border: none; color: white; font-size: 3rem;
+    line-height: 1; opacity: 0.7; transition: 0.3s; cursor: pointer;
+  }
+  .btn-close-custom:hover { opacity: 1; transform: scale(1.1); }
+
+  /* Toolbar de Ferramentas (Zoom + / -) */
+  .zoom-toolbar {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 25px; border-radius: 50px; display: flex; gap: 20px; z-index: 1080;
+  }
+  .zoom-toolbar button {
+    background: transparent; border: 1px solid rgba(255,255,255,0.6); color: white;
+    width: 45px; height: 45px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;
+  }
+  .zoom-toolbar button:hover { background: white; color: black; }
+
+  .btn-close-custom, .zoom-toolbar {
+    z-index: 2100 !important;
+  }
+
+  /* =================================================================================
+     6. ESTILIZAÇÃO DO CARRINHO LATERAL (AMAZON UI)
+     ================================================================================= */
+/* Ajuste da Área de Fechamento Desktop (129px) */
+.ewc-header-static {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 4px; /* Padding lateral mínimo */
+    border-bottom: 1px solid #eee;
+    background: #fff;
+}
+
+.ewc-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+  .ewc-amount { font-size: 14px; color: #B12704; font-weight: 700; display: block; margin-bottom: 8px; }
+  
+
+  #itens-carrinho-fixo { flex: 1; overflow-y: auto; padding-top: 5px; }
+  .ewc-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #F0F0F0;
+    position: relative;
+    padding-bottom: 20px; /* Espaço para o aviso de estoque */
+  }
+
+  .ewc-item .text-danger {
+    position: absolute;
+    bottom: 5px;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .ewc-item img { width: 85px; height: 85px; object-fit: cover; border-radius: 4px; }
+  .ewc-item-meta { font-size: 9px; color: #565959; text-transform: uppercase; text-align: center; }
+
+  /* Stepper Amazon */
+  .a-stepper-container {
+    display: flex; align-items: center; border: 1px solid #D5D9D9;
+    border-radius: 8px; background-color: #F0F2F2; width: 105px; height: 28px; margin: 5px auto;
+  }
+
+  /* =================================================================================
+     7. RESPONSIVIDADE (CARRINHO ESCONDE / FILTROS MOBILE)
+     ================================================================================= */
+  @media (max-width: 991px) {
+    #layout-global { display: block; }
+    #carrinho-global-lateral { display: none !important; }
+    
+    .sidebar-filtros {
+      position: fixed !important; 
+      top: 0; 
+      left: 0; 
+      width: 300px; 
+      height: 100vh !important;
+      z-index: 5000 !important; /* Valor muito alto para ficar no topo */
+      transform: translateX(-100%); 
+      transition: transform 0.3s;
+      border-radius: 0;
+      background-color: white !important;
+      visibility: visible !important;
+    }
+
+    /* Exibição quando o menu de filtros estiver aberto */
+    .sidebar-filtros.show {
+      transform: translateX(0);
+    }
+  }
+
+  /* --- FIX: NAVBAR SEMPRE NO TOPO --- */
+
+/* FORÇAR A BARRA A FICAR PRESA NO TOPO */
+#barra-navegacao-topo {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  width: 100% !important;
+  z-index: 1200 !important; /* Alto o suficiente para ficar sobre os produtos, mas sob o modal */
+  background-color: #ffffff !important; /* Fundo sólido para não ficar transparente */
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Sombra para destacar ao rolar */
+}
+
+/* Se você tiver uma barra de categorias logo abaixo do Nav principal */
+.sticky-filter-mobile {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 56px; /* Ajuste aqui conforme a altura do seu Nav principal */
+  z-index: 1040;
+  background-color: #fff;
+}
+
+/* Regra de segurança para forçar o banner a sumir */
+#banner-home.d-none {
+  display: none !important;
+}
+
+/* Estilo dos botões individuais + e - */
+.a-stepper-btn {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #0F1111;
+    transition: background 0.2s;
+}
+
+.a-stepper-btn:hover { 
+    background-color: #E3E6E6; 
+}
+
+/* Estilo do número que fica no meio */
+.a-stepper-value {
+    flex-grow: 1;
+    background-color: #FFF;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #0F1111;
+    border-left: 1px solid #D5D9D9;
+    border-right: 1px solid #D5D9D9;
+}
+
+/* Garantir que o botão de enviar tenha altura e preenchimento */
+.btn-amazon-wa {
+  background-color: #25D366 !important; /* Verde WhatsApp */
+  border: 1px solid #128C7E !important; /* Verde um pouco mais escuro para a borda */
+  color: #ffffff !important;             /* Texto Branco */
+  font-weight: bold !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;                             /* Espaço entre ícone e texto */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-amazon-wa:hover {
+  background-color: #128C7E !important; /* Escurece ao passar o mouse */
+  color: #ffffff !important;
+  transform: translateY(-2px);          /* Leve efeito de elevação */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* 1. O painel do carrinho fica no topo absoluto */
+.offcanvas {
+  z-index: 5000 !important;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.2); /* Sombra suave para dar profundidade */
+}
+
+/* FORÇAR O CARRINHO A FICAR POR CIMA DE TUDO (Inclusive a Nav) */
+.offcanvas-backdrop {
+  z-index: 4000 !important;
+  opacity: 0.5 !important;
+}
+
+/* Preço do produto no carrinho */
+.ewc-item-price {
+  color: #000000 !important; /* Preto */
+  font-weight: bold !important;
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+/* Descrição, Cor e Tamanho (Preto e Negrito) */
+.ewc-item-meta {
+  color: #000 !important; /* Força o preto */
+  font-weight: bold !important; /* Força o negrito */
+  font-size: 10px;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Nome do produto (caso queira destacar também) */
+.ewc-item-name {
+  font-weight: bold !important;
+  color: #000 !important;
+  font-size: 11px;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+/* Badge do Carrinho (Bolinha Vermelha Flutuante) */
+.badge-cart {
+  position: absolute;
+  top: -2px;    /* Sobe um pouco acima do botão */
+  right: -5px;  /* Vai para a direita para sobrepor o ícone */
+  
+  background-color: #cc0000; /* Vermelho vibrante */
+  color: white;
+  
+  /* Garante que seja uma bolinha redonda perfeita */
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  
+  /* Centraliza o número perfeitamente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-size: 10px; /* Tamanho da fonte ajustado para caber na bolinha */
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sombra suave para dar destaque */
+  z-index: 10;
+  pointer-events: none; /* O clique passa direto para o botão */
+}
+
+.subtotal-header {
+    text-align: center;
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+    background-color: #fff;
+}
+
+.subtotal-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+/* Valor em Vermelho (Destaque que você pediu) */
+#total-carrinho-fixo {
+    color: #B12704 !important;
+    font-size: 18px !important;
+    font-weight: 800;
+    margin-bottom: 10px;
+    white-space: nowrap;
+}
+
+/* Valor em Vermelho (Como solicitado) */
+#total-carrinho-mobile, #total-carrinho-fixo {
+    color: #B12704 !important;
+    font-size: 1.8rem;
+    font-weight: 800;
+    display: block;
+    margin-bottom: 15px;
+}
+
+
+
+/* Botão WhatsApp Estilo Pílula Moderno */
+.btn-modern-wa {
+    background-color: #FF4F95 !important; /* Rosa da loja */
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 50px !important; /* Formato Pílula */
+    padding: 12px 25px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(255, 79, 149, 0.3);
+    transition: transform 0.2s ease;
+    text-decoration: none !important;
+}
+
+.btn-modern-wa:hover {
+    transform: scale(1.03);
+    background-color: #128C7E !important;
+}
+
+/* =================================================================================
+   BOTÃO DESKTOP (129px) - AMARELO -> VERDE NO HOVER
+   ================================================================================= */
+.btn-modern-wa-desktop {
+    background-color: #FF4F95 !important; /* Rosa Elegante */
+    color: #FFFFFF !important;            /* Texto Branco */
+    border: 1px solid #212529 !important;
+    border-radius: 50px !important;
+    width: 115px;
+    padding: 8px 12px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease; 
+    cursor: pointer;
+}
+
+/* Garante que o ícone acompanhe a cor do texto */
+.btn-modern-wa-desktop i {
+    font-size: 14px !important;
+    color: inherit; 
+    flex-shrink: 0;
+}
+
+.btn-modern-wa-desktop span {
+    font-size: 9px !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: inherit;
+}
+
+/* EFEITO DE TRANSFORMAÇÃO: Fica Verde WhatsApp ao passar o mouse */
+.btn-modern-wa-desktop:hover {
+    background-color: #25D366 !important; /* Verde Oficial */
+    border-color: #128C7E !important;
+    color: #FFFFFF !important;             /* Texto e ícone ficam brancos */
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* Cor Personalizada do Rodapé */
+.footer-custom {
+    background-color: #ececec !important; /* Azul Marinho Profundo */
+    border-top: 4px solid #FF4F95;      /* Faixa de destaque no topo */
+}
+
+/* Títulos */
+.footer-custom h5 {
+  color: #000 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Ajuste das cores dos textos secundários para não sumirem */
+.footer-custom .text-secondary {
+    color: #FF4F95 !important;
+}
+
+/* Devolve o Rosa para os links e ícones (Instagram/WhatsApp) */
+.footer-custom a, 
+.footer-custom a i, 
+.footer-custom a span {
+    color: #FF4F95 !important; /* Cor rosa da sua logo */
+    font-weight: 600;
+}
+
+/* Efeito ao passar o mouse: o rosa fica um pouco mais escuro */
+.footer-custom a:hover {
+    color: #d83a75 !important;
+    opacity: 1;
+}
+
+#footer-sobre {
+    text-align: justify;
+    text-justify: inter-word; /* Melhora o espaçamento entre palavras */
+    hyphens: auto;            /* Adiciona hifenização se necessário */
+    color: #000 !important;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+#colorlink {
+    color: #FF4F95 !important;
+}
+
+/* =================================================================================
+   CORREÇÃO DE BOTÃO OCULTO NO IPHONE (SAFE AREA)
+   ================================================================================= */
+/* REGRA DEFINITIVA: MOBILE ABAIXO DE 700PX */
+@media (max-width: 800px) {
+/* 1. RODAPÉ: Justificado com última linha centralizada */
+  #footer-sobre {
+    text-align: justify !important;
+    text-align-last: center !important;
+    padding: 0 15px !important;
+  }
+
+  
+
+@media (max-width: 991px) {
+  
+  
+    /* Seleciona o contêiner de texto dentro do banner */
+  #banner-home > div {
+    display: flex !important;           /* Ativa o Flexbox */
+    flex-direction: column !important;  /* Empilha os textos verticalmente */
+    justify-content: flex-end !important; /* Empurra todo o bloco para o final (rodapé) */
+    align-items: center !important;     /* Centraliza os textos horizontalmente */
+    height: 100% !important;            /* Faz o contêiner ocupar toda a altura do banner */
+    padding-bottom: 30px !important;    /* Adiciona um respiro na parte inferior */
+  }
+  
+  /* Opcional: Se precisar ajustar o tamanho da fonte no mobile */
+  #banner-titulo {
+    font-size: 1.8rem !important;
+  }
+  
+  #banner-subtitulo {
+    font-size: 1rem !important;
+    margin-bottom: 0 !important; /* Remove margem extra no final */
+  }
+
+  .sidebar-filtros {
+    /* Usa a altura dinâmica para evitar que a barra do Safari cubra o fundo */
+    height: 100dvh !important; 
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .offcanvas-body {
+    flex: 1;
+    overflow-y: auto;
+    /* Adiciona o recuo da barra do iPhone no final do scroll */
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  /* Garante que o container do botão "VER RESULTADOS" sempre apareça */
+  .sidebar-filtros .mt-auto {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 15px 20px !important;
+    /* Empurra o botão para cima da barra de gestos do iPhone */
+    padding-bottom: calc(15px + env(safe-area-inset-bottom)) !important;
+    z-index: 10;
+    width: 100%;
+  }
+}
+
+
+/* =================================================================================
+     CORES PERSONALIZADAS DA LOJA
+     ================================================================================= */
+  .text-rosa-loja {
+      color: #FF4F95 !important;
+  }
+  
+  .bg-rosa-loja {
+      background-color: #FF4F95 !important;
+  }
+
+/* =================================================================================
+   CORREÇÃO DEFINITIVA DO BACKDROP (TELA PRETA DO MODAL)
+   ================================================================================= */
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+.modal {
+    z-index: 1055 !important;
+}  
+
+/* 3. Blindagem extra apenas para o modal de Aviso, garantindo que ele fure a tela preta */
+#modalAvisoEstoque {
+    z-index: 1060 !important;
+}
