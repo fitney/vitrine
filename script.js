@@ -606,9 +606,12 @@ function renderizarCheckboxes(containerId, lista, tipo) {
 function validarProduto(p, fCat, fSub, fCor, fTam) {
     // A. Segurança
     if (v2n(p.valorVenda) <= 0 && v2n(p.valorPromo) <= 0) return false;
-    var estoqueTotal = (Array.isArray(p.variacoes) ? p.variacoes : [])
+    
+	/** FILTRA SOMENTE PRODUTOS COM ESTOQUE
+	var estoqueTotal = (Array.isArray(p.variacoes) ? p.variacoes : [])
        .reduce((acc, v) => acc + (Number(v.quantidade) || 0), 0);
     if (estoqueTotal <= 0) return false;
+	*/
 
     // B. Normalização
     var pCat = String(p.categoria || "").trim().toUpperCase();
@@ -752,11 +755,14 @@ function realizarBuscaTopo(termo) {
   var resultados = bancoDeDados.filter(function(p) {
     if (v2n(p.valorVenda) <= 0 && v2n(p.valorPromo) <= 0) return false;
     
-    // Mantém a guilhotina de 20 dias para a busca GERAL
+    // 🚀 GUILHOTINA DINÂMICA: Verifica a variável que veio do backend
     if (p.estoque <= 0) {
+       let limiteDiasConfig = parseInt(AppConfig.data.TEMPO_VITRINE, 10);
+       const tempoVitrine = isNaN(limiteDiasConfig) ? 90 : limiteDiasConfig;
+       
        const hoje = new Date().getTime();
        const diferencaEmDias = (hoje - p.dataUltimaVenda) / (1000 * 3600 * 24);
-       if (diferencaEmDias > 20) return false;
+       if (diferencaEmDias > tempoVitrine) return false;
     }
     
     var matchNome = p.nome.toUpperCase().includes(t);
@@ -1127,14 +1133,21 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
     var p = bancoDeDados.find(x => String(x.id) === String(idProduto));
     if (!p) return mostrarAvisoFlutuante("❌ Erro: Produto não encontrado.", "danger");
 
-    // 3. Extrai TODOS os tamanhos da base global (qualquer tamanho cadastrado no BD)
-    var todosTamanhosBD = [...new Set(bancoDeDados.flatMap(prod => (prod.variacoes || []).map(v => v.tamanho)))].filter(Boolean);
-    var pesoTamanho = { 'PP':1, 'P':2, 'M':3, 'G':4, 'GG':5, 'XG':6, 'G1':7, 'G2':8, 'G3':9, 'UNICO':10 };
-    todosTamanhosBD.sort((a, b) => (pesoTamanho[String(a).toUpperCase()]||99) - (pesoTamanho[String(b).toUpperCase()]||99));
-    
-    if (todosTamanhosBD.length === 0) todosTamanhosBD = ["ÚNICO"]; 
+    // 3. 🚀 CORREÇÃO: Lista FIXA com toda a sua grade de tamanhos (incluindo ÚNICO por precaução para acessórios)
+    var todosTamanhosBD = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'G1', 'G2', 'G3'];
 
-    var opcoesTamanho = todosTamanhosBD.map(t => {
+    // 🚀 NOVO: Descobre quais tamanhos JÁ TÊM estoque para este produto
+    var tamanhosComEstoque = [];
+    (p.variacoes || []).forEach(v => {
+        if (Number(v.quantidade) > 0) {
+            tamanhosComEstoque.push(String(v.tamanho).toUpperCase().trim());
+        }
+    });
+
+    // 🚀 NOVO: Filtra a lista padrão removendo os tamanhos que já têm estoque
+    var tamanhosParaModal = todosTamanhosBD.filter(t => !tamanhosComEstoque.includes(t));
+
+    var opcoesTamanho = tamanhosParaModal.map(t => {
         var isSelected = (tamanhoPreSelecionado && String(t).toUpperCase() === String(tamanhoPreSelecionado).toUpperCase()) ? "selected" : "";
         return `<option value="${t}" ${isSelected}>${t}</option>`;
     }).join('');
@@ -1171,18 +1184,18 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
                 <option value="">Selecione...</option>
                 ${opcoesTamanho}
               </select>
-              <label class="text-muted fw-bold small text-uppercase">Tamanho Desejado</label>
+              <label class="text-muted fw-bold small text-uppercase">Tamanho Desejado <span class="text-danger fs-6">*</span></label>
             </div>
 
             <div class="form-floating mb-3 shadow-sm">
               <input type="text" class="form-control border-0 fw-bold text-dark" id="aviso-nome" placeholder="Seu nome">
-              <label class="text-muted fw-bold small text-uppercase">Seu Nome</label>
+              <label class="text-muted fw-bold small text-uppercase">Seu Nome <span class="text-danger fs-6">*</span></label>
             </div>
 
             <div class="form-floating mb-2 shadow-sm">
               <input type="tel" class="form-control border-0 fw-bold text-dark" id="aviso-whatsapp" placeholder="WhatsApp" 
                      oninput="this.value = this.value.replace(/\\D/g, '').replace(/^(\\d{2})(\\d)/g, '($1) $2').replace(/(\\d)(\\d{4})$/, '$1-$2').substring(0, 15);">
-              <label class="text-muted fw-bold small text-uppercase">WhatsApp (DDD + Número)</label>
+              <label class="text-muted fw-bold small text-uppercase">WhatsApp (DDD + Número) <span class="text-danger fs-6">*</span></label>
             </div>
 
           </div>
@@ -1725,12 +1738,28 @@ const AppConfig = {
   data: {},
 
   // 1. Busca os dados do servidor (DAO)
-  init: function() {
+init: function() {
+    // Carrega do Cache Local instantaneamente
+    const configCache = localStorage.getItem('cache_config_vitrine_v1');
+    if (configCache) {
+      try {
+        this.data = JSON.parse(configCache);
+        this.applyToDOM();
+      } catch (e) {
+        console.error("Erro ao ler cache de configuração:", e);
+      }
+    }
+
+    // Busca no Google em background para atualizar se algo mudou
     fetch(API_URL + "?action=getConfigDAO")
       .then(response => response.json())
       .then((res) => {
-        this.data = res; 
-        this.applyToDOM();
+        // Só atualiza se houver mudança real
+        if (JSON.stringify(this.data) !== JSON.stringify(res)) {
+            this.data = res; 
+            localStorage.setItem('cache_config_vitrine_v1', JSON.stringify(res));
+            this.applyToDOM();
+        }
       })
       .catch(err => console.warn("Configurações não encontradas ou erro no DAO.", err));
   },
@@ -2028,6 +2057,17 @@ function renderizarDetalhesProduto(p) {
             style="display:none; transition: all 0.3s; background-color: #FF4F95; border-color: #FF4F95; color: #FFFFFF;">
             <i class="bi bi-cart-plus me-2"></i> ADICIONAR AO CARRINHO
           </a>
+			<!-- 🚀 AJUSTE VISUAL: O link agora tem pistas claras de interatividade -->
+          <div class="text-center mt-4">
+            <a href="javascript:void(0)" onclick="abrirModalAviso('${safeId(p.id)}')" 
+               class="text-muted small text-decoration-underline" 
+               style="transition: 0.3s; cursor: pointer; display: inline-block;" 
+               onmouseover="this.style.color='#FF4F95'; this.style.transform='scale(1.02)';" 
+               onmouseout="this.style.color=''; this.style.transform='scale(1)';"
+               title="Clique para ser avisado sobre tamanhos">
+              <i class="bi bi-bell-fill me-1"></i> Gostou, mas não tem seu tamanho? <strong>Avise-me quando disponível.</strong>
+            </a>
+          </div>
     `;
   }
 
@@ -2140,16 +2180,51 @@ function renderizarChipsCategorias() {
 
 // Coleta os dados do Modal e envia para o Back-end (Planilha)
 function enviarAvisoLead() {
+    // Captura os elementos HTML inteiros (para podermos mudar a borda deles)
+    const inputTamanho = document.getElementById('aviso-tamanho');
+    const inputNome = document.getElementById('aviso-nome');
+    const inputWhatsapp = document.getElementById('aviso-whatsapp');
+
     const sku = document.getElementById('aviso-sku').value;
     const nomeProd = document.getElementById('aviso-nome-prod').value;
-    const tamanho = document.getElementById('aviso-tamanho').value;
-    const nome = document.getElementById('aviso-nome').value.trim();
-    const whatsapp = document.getElementById('aviso-whatsapp').value.trim();
+    
+    // Pega os valores digitados
+    const tamanho = inputTamanho.value;
+    const nome = inputNome.value.trim();
+    const whatsapp = inputWhatsapp.value.trim();
 
-    // Validações de segurança
-    if (!tamanho) return mostrarAvisoFlutuante("⚠️ Selecione o tamanho desejado.", "warning");
-    if (!nome) return mostrarAvisoFlutuante("⚠️ Informe seu nome.", "warning");
-    if (!whatsapp || whatsapp.length < 14) return mostrarAvisoFlutuante("⚠️ Informe um WhatsApp válido com DDD.", "warning");
+    // 1. Limpa os erros visuais de tentativas anteriores (Restaura o visual padrão)
+    [inputTamanho, inputNome, inputWhatsapp].forEach(el => {
+        el.classList.remove('is-invalid', 'border', 'border-danger');
+        el.classList.add('border-0');
+    });
+
+    let temErro = false;
+
+    // 2. Valida cada campo e aplica a borda vermelha se estiver vazio/incorreto
+    if (!tamanho) {
+        inputTamanho.classList.remove('border-0');
+        inputTamanho.classList.add('is-invalid', 'border', 'border-danger');
+        temErro = true;
+    }
+    
+    if (!nome) {
+        inputNome.classList.remove('border-0');
+        inputNome.classList.add('is-invalid', 'border', 'border-danger');
+        temErro = true;
+    }
+    
+    // O WhatsApp precisa ter pelo menos 14 caracteres: (XX) XXXXX-XXXX
+    if (!whatsapp || whatsapp.length < 14) {
+        inputWhatsapp.classList.remove('border-0');
+        inputWhatsapp.classList.add('is-invalid', 'border', 'border-danger');
+        temErro = true;
+    }
+
+    // 3. Se houver erro, aborta o envio e mostra a notificação
+    if (temErro) {
+        return mostrarAvisoFlutuante("⚠️ Preencha corretamente os campos destacados em vermelho.", "warning");
+    }
 
     // Efeito de carregamento no botão
     const btn = document.getElementById('btn-salvar-aviso');
@@ -2189,7 +2264,6 @@ function enviarAvisoLead() {
         btn.innerHTML = txtOriginal;
     });
 }
-
 // Exibe um aviso flutuante elegante na Vitrine (Substitui os alerts nativos)
 function mostrarAvisoFlutuante(mensagem, cor = 'success') {
   let container = document.getElementById('toast-container-global');
