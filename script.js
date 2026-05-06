@@ -21,7 +21,7 @@
  */
 
 // ⚠️ IMPORTANTE: Cole aqui a URL do seu Web App gerado no Google Apps Script!
-const API_URL = "https://script.google.com/macros/s/AKfycbybDwNYEvF7cqex7PIB_ySynPz6l2JLP_ODVnnFKpcAp4IrRfrLo0do8mkzS-RVcsSoiQ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyACt5kfhgv4M9mgWqmGQp3jPRqka9bM9B4oMKQexbHI7Wq4Z6RO-YNBofzwHmgW6XNdQ/exec"; 
 
 let bancoDeDados = []; // Repositório central de produtos carregados do servidor.
 let carrinho = []; // Lista de itens selecionados pelo usuário para compra.
