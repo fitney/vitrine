@@ -2289,4 +2289,446 @@ function mostrarAvisoFlutuante(mensagem, cor = 'success') {
     setTimeout(() => toast.remove(), 150);
   }, 3000);
 }
+
+// =================================================================================
+// GATILHO E INJEÇÃO DO MODAL PROMOCIONAL 100% VIA JAVASCRIPT (NOVA DEMANDA)
+// =================================================================================
+
+function injetarEExibirPromocao() {
+    // Utiliza sessionStorage para garantir que só mostre 1 vez por visita
+    var promoJaVista = sessionStorage.getItem('promoDiaDasMaesVista');
+    
+    if (!promoJaVista) {
+        
+        // 1. INJETAR TODO O CSS DIRETAMENTE NO <HEAD> DA PÁGINA
+        var styleElement = document.createElement('style');
+        styleElement.innerHTML = `
+            /* =================================================================================
+               MODAL PROMOCIONAL - CSS (NOVA DEMANDA)
+               ================================================================================= */
+            @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,700;1,900&family=Barlow:wght@300;400;600&display=swap');
+
+            /* 🔥 CORREÇÃO: Força a película preta a ficar por cima do cabeçalho/busca 🔥 */
+            .modal-backdrop {
+                z-index: 999998 !important;
+            }
+            #modalPromocao {
+                z-index: 999999 !important;
+           }
+
+            :root {
+              --pink: #ff1f78;
+              --pink-mid: #ff4d9a;
+              --pink-glow: rgba(255,31,120,0.55);
+            }
+
+            .banner-promo-custom {
+              position: relative; 
+              width: 100%; 
+              min-height: 520px;
+              background: #080808; 
+              overflow: hidden;
+              font-family: 'Barlow', sans-serif;
+              color: white;
+            }
+
+            .banner-promo-custom * {
+              box-sizing: border-box;
+            }
+
+            /* grid */
+            .grid-promo {
+              position: absolute; inset: 0;
+              background-image:
+                linear-gradient(rgba(255,31,120,0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,31,120,0.07) 1px, transparent 1px);
+              background-size: 60px 60px; z-index: 1; pointer-events: none;
+              animation: gridShift 10s linear infinite;
+            }
+            @keyframes gridShift { from{background-position:0 0,0 0} to{background-position:60px 60px,60px 60px} }
+
+            /* laser */
+            .banner-promo-custom .laser {
+              position: absolute; left: 0; right: 0; height: 2px;
+              background: linear-gradient(90deg, transparent 0%, var(--pink) 30%, var(--pink-mid) 70%, transparent 100%);
+              box-shadow: 0 0 18px var(--pink-glow); z-index: 3;
+              animation: laserScan 5s ease-in-out infinite;
+            }
+            @keyframes laserScan { 0%{top:-4px;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
+
+            /* diagonal pink block */
+            .banner-promo-custom .diagonal-block {
+              position: absolute; top: -80px; right: -60px;
+              width: 50%; height: 700px;
+              background: linear-gradient(135deg, var(--pink) 0%, #c4005e 100%);
+              transform: skewX(-12deg); z-index: 2;
+              clip-path: polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%);
+            }
+
+            /* pink glow */
+            .banner-promo-custom .pink-glow {
+              position: absolute; top: -100px; right: -120px;
+              width: 580px; height: 800px;
+              background: radial-gradient(ellipse, rgba(255,31,120,0.3) 0%, transparent 65%);
+              z-index: 1; pointer-events: none;
+              animation: glowPulse 3s ease-in-out infinite;
+            }
+            @keyframes glowPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.65;transform:scale(1.07)} }
+
+            /* logo */
+            .banner-promo-custom .logo-area {
+              position: absolute; top: 50%; right: 20px;
+              transform: translateY(-50%);
+              width: 370px; height: 370px; z-index: 4;
+              opacity: 0; animation: popIn 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards 0.5s;
+              filter: drop-shadow(0 0 40px rgba(255,31,120,0.6));
+            }
+            .banner-promo-custom .logo-area img { width: 100%; object-fit: contain; }
+            @keyframes popIn {
+              from{opacity:0;transform:translateY(-50%) scale(0.85)}
+              to{opacity:1;transform:translateY(-50%) scale(1)}
+            }
+
+            /* top accent */
+            .banner-promo-custom .top-accent {
+              position: absolute; top: 0; left: 0; right: 0; height: 4px;
+              background: linear-gradient(90deg, var(--pink) 0%, var(--pink-mid) 40%, transparent 100%);
+              box-shadow: 0 0 14px var(--pink-glow); z-index: 20;
+            }
+
+            /* corners */
+            .banner-promo-custom .corner { position: absolute; width: 18px; height: 18px; z-index: 15; }
+            .banner-promo-custom .corner.tl { top: 14px; left: 14px; border-top: 2px solid var(--pink); border-left: 2px solid var(--pink); }
+            .banner-promo-custom .corner.tr { top: 14px; right: 14px; border-top: 2px solid var(--pink); border-right: 2px solid var(--pink); }
+            .banner-promo-custom .corner.bl { bottom: 52px; left: 14px; border-bottom: 2px solid var(--pink); border-left: 2px solid var(--pink); }
+
+            /* left content */
+            .left-promo {
+                position: relative;
+                z-index: 10;
+                width: 60%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 44px 30px 60px 52px;
+            }
+
+            .tag-promo { display:flex; align-items:center; gap:10px; margin-bottom:18px; opacity:0; animation:slideIn 0.5s ease forwards 0.15s; }
+            .tag-bar { width:28px; height:3px; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); }
+            .tag-text { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:6px; text-transform:uppercase; color:var(--pink); }
+
+            .banner-promo-custom .brand { font-family:'Barlow Condensed',sans-serif; font-size:108px; font-weight:900; font-style:italic; line-height:0.85; text-transform:uppercase; color:#fff; letter-spacing:-2px; margin-bottom:4px; opacity:0; animation:slideIn 0.5s ease forwards 0.28s; }
+            .banner-promo-custom .brand .hl { color:var(--pink); text-shadow:0 0 30px var(--pink-glow),0 0 60px rgba(255,31,120,0.3); }
+
+            .sub-promo {
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 12px;
+                font-weight: 300;
+                letter-spacing: 8px;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255);
+                margin-bottom: 28px;
+                opacity: 0;
+                animation: slideIn 0.5s ease forwards 0.4s;
+            }
+            .divider-promo { display:flex; align-items:center; gap:10px; margin-bottom:24px; opacity:0; animation:slideIn 0.5s ease forwards 0.5s; }
+            .div-line { width:36px; height:1px; background:var(--pink); opacity:0.5; }
+            .div-dot  { width:5px; height:5px; border-radius:50%; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); }
+
+            .promo-section { margin-bottom:26px; opacity:0; animation:slideIn 0.5s ease forwards 0.62s; }
+            .promo-eyebrow {
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 30px;
+                font-weight: 700;
+                letter-spacing: 5px;
+                text-transform: uppercase;
+                margin-bottom: 20px;
+                justify-content: center;
+            }
+            .promo-big { display:flex; align-items:flex-end; line-height:1; }
+            .promo-ate {
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 18px;
+                font-weight: 700;
+                font-style: italic;
+                text-transform: uppercase;
+                margin-bottom: 16px;
+                margin-right: 8px;
+                letter-spacing: 2px;
+            }
+            .promo-num { font-family:'Barlow Condensed',sans-serif; font-size:114px; font-weight:900; font-style:italic; color:var(--pink); line-height:1; text-shadow:0 0 40px var(--pink-glow),0 0 80px rgba(255,31,120,0.25); letter-spacing:-4px; margin: 0; }
+            .promo-pct { font-family:'Barlow Condensed',sans-serif; font-size:50px; font-weight:900; font-style:italic; color:var(--pink); margin-bottom:14px; text-shadow:0 0 20px var(--pink-glow); }
+            .promo-desc {
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 15px;
+                font-weight: 400;
+                letter-spacing: 5px;
+                text-transform: uppercase;
+                margin-top: 2px;
+            }
+            .validity { display:flex; align-items:center; gap:12px; opacity:0; animation:slideIn 0.5s ease forwards 0.78s; flex-wrap: wrap;}
+            .validity-pill { background:rgba(255,31,120,0.15); border:1px solid rgba(255,31,120,0.35); border-radius:2px; padding:5px 12px; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--pink-mid); }
+            .validity-dates {
+                font-family: 'Barlow', sans-serif;
+                font-size: 14px;
+                font-weight: 300;
+                letter-spacing: 1px;
+            }
+            
+            /* Novo botão VER OFERTAS (Inicia oculto no Desktop) */
+            .btn-ver-ofertas {
+                display: none;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background-color: #ffffff;
+                color: var(--pink);
+                border: none;
+                border-radius: 6px;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 18px;
+                font-weight: 900;
+                letter-spacing: 3px;
+                text-transform: uppercase;
+                box-shadow: 0 4px 15px rgba(255,31,120,0.4);
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .btn-ver-ofertas:active {
+                transform: scale(0.95);
+            }
+
+            /* bottom bar */
+            .bottom-bar-promo {
+              position:absolute; bottom:0; left:0; right:0; height:44px;
+              background:rgba(255,31,120,0.07); border-top:1px solid rgba(255,31,120,0.18);
+              z-index:10; display:flex; align-items:center; padding:0 20px 0 52px; gap:14px;
+              opacity:0; animation:fadeIn 0.6s ease forwards 1s;
+            }
+            .bb-dot { width:5px; height:5px; border-radius:50%; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); animation:blink 1.5s ease-in-out infinite; }
+            @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+            .bb-text {
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 19px;
+                font-weight: 600;
+                letter-spacing: 5px;
+                text-transform: uppercase;
+            }
+            .bb-site {
+                margin-left: auto;
+                font-family: 'Barlow Condensed', sans-serif;
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 4px;
+                text-transform: uppercase;
+            }
+            /* badge */
+            .badge-promo {
+              position:absolute; top:24px; right:24px; z-index:15;
+              width:88px; height:88px; border-radius:50%;
+              border:2px solid rgba(255,31,120,0.5);
+              background:rgba(0,0,0,0.65);
+              display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+              opacity:0; animation:fadeIn 0.8s ease forwards 1.1s;
+              box-shadow:0 0 22px rgba(255,31,120,0.3),inset 0 0 20px rgba(255,31,120,0.05);
+            }
+            .badge-promo .badge-icon { font-size:20px; animation:pulse 2s ease-in-out infinite 1.5s; }
+            @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+            .badge-promo .badge-txt { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--pink); text-align:center; line-height:1.4; }
+
+            @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+            @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+
+            /* =========================================
+               RESPONSIVIDADE (MOBILE) AJUSTADA
+               ========================================= */
+            @media (max-width: 768px) {
+              .left-promo {
+                width: 100%;
+                padding: 30px 20px 60px 20px;
+                align-items: center;
+                text-align: center;
+              }
+              .banner-promo-custom .diagonal-block {
+                width: 100%;
+                right: -50%;
+              }
+              .banner-promo-custom .logo-area {
+                opacity: 0.85 !important; /* Aumentado a opacidade da foto de fundo para ficar mais viva */
+                height: 120px;
+                right: -20px;
+                top: 60%;
+              }
+              .banner-promo-custom .brand { font-size: 70px; } 
+              
+              /* Tratamento das fontes que você aumentou no Desktop */
+              .promo-eyebrow { font-size: 18px; margin-bottom: 10px; line-height: 1.2; }
+              .promo-desc { font-size: 11px; margin-bottom: 5px; }
+              .tag-text { font-size: 12px; }
+
+              /* 🔥 NOVO: Margem solicitada somente no mobile 🔥 */
+              .promo-section { margin-bottom: 141px; }
+              
+              /* Ajuste do agrupamento promo-big */
+              .promo-big { justify-content: center; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+              .promo-num { font-size: 80px; }
+              .promo-pct { font-size: 40px; }
+              
+              .badge-promo { width: 65px; height: 65px; top: 10px; right: 10px; }
+              .badge-promo .badge-txt { font-size: 6px; letter-spacing: 1px; }
+              .badge-promo .badge-icon { font-size: 14px; }
+              
+              /* Tratamento do rodapé */
+              .bottom-bar-promo { padding: 0 15px; justify-content: center;}
+              .bb-text { font-size: 11px; white-space: normal; line-height: 1.2; text-align: center; }
+              
+              .validity { flex-direction: column; gap: 6px; }
+
+              /* 🔥 CORREÇÕES APLICADAS AQUI 🔥 */
+              
+              /* 1. Melhora a cor do "VÁLIDO" para ficar legível por cima do fundo rosa */
+              .validity-pill {
+                  color: #ffffff !important;
+                  border-color: rgba(255, 255, 255, 0.6) !important;
+                  background: rgba(255, 255, 255, 0.15) !important;
+              }
+
+              /* 2. Oculta o X no celular */
+              .close-desktop-only { 
+                  display: none !important; 
+              }
+
+              /* 3. Mostra o botão de "VER OFERTAS" apenas no celular */
+              .btn-ver-ofertas { 
+                  display: block; 
+                  width: 90%; 
+                  margin-left: auto; 
+                  margin-right: auto; 
+              }
+            }
+        `;
+        document.head.appendChild(styleElement);
+
+        // 2. INJETAR TODO O HTML DIRETAMENTE NO <body> DA PÁGINA
+        var modalContainer = document.createElement('div');
+        modalContainer.innerHTML = `
+            <!-- =================================================================================
+                 MODAL PROMOCIONAL (NOVA DEMANDA)
+                 ================================================================================= -->
+            <div class="modal fade" id="modalPromocao" tabindex="-1" aria-labelledby="modalPromocaoLabel" aria-hidden="true" style="z-index: 10600;">
+              <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content bg-transparent border-0 overflow-hidden rounded-4">
+                  
+                  <!-- 🔥 Botão de Fechar do Modal (X) - Agora com classe para esconder no mobile 🔥 -->
+                  <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 close-desktop-only" data-bs-dismiss="modal" aria-label="Close" style="z-index: 9999;"></button>
+
+                  <!-- INÍCIO DO SEU BANNER -->
+                  <div class="banner-promo-custom">
+                    <div class="top-accent"></div>
+                    <div class="grid-promo"></div>
+                    <div class="laser"></div>
+                    <div class="pink-glow"></div>
+                    <div class="diagonal-block"></div>
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+
+                    <div class="logo-area">
+                      <img src="https://fitney.com.br/img/monday.png" alt="FitNey"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'font-family:Barlow Condensed,sans-serif;font-size:90px;font-weight:900;font-style:italic;color:#ff1f78;text-shadow:0 0 40px rgba(255,31,120,0.6);letter-spacing:-2px\\'>FN</div>'">
+                    </div>
+
+                    <div class="badge-promo">
+                      <div class="badge-icon">💗</div>
+                      <div class="badge-txt">Dia<br>das<br>Mães</div>
+                    </div>
+
+                    <div class="left-promo">
+                      <div class="tag-promo">
+                        <div class="tag-bar"></div>
+                        <div class="tag-text">Moda Fitness</div>
+                      </div>
+                      <div class="brand">Fit<span class="hl">Ney</span></div>
+                      <div class="sub-promo">TREINE COM CONFIANÇA E ESTILO</div>
+                      <div class="divider-promo">
+                        <div class="div-line"></div>
+                        <div class="div-dot"></div>
+                      </div>
+                      <div class="promo-section">
+                        <div class="promo-eyebrow">⚡ Promoção Especial  Mês das Mães</div>
+                        <div class="promo-desc">Produtos com</div>
+                        <div class="promo-big">
+                          <span class="promo-ate">até</span>
+                          <span class="promo-num">20</span>
+                          <span class="promo-pct">%</span>
+                          <span class="promo-desc">de desconto.</span>
+                        </div>
+                      </div>
+                      <div class="validity">
+                        <div class="validity-pill">válido</div>
+                        <div class="validity-dates">08 de maio &nbsp;→&nbsp; 15 de maio de 2026</div>
+                        
+                        <!-- 🔥 NOVO BOTÃO VER OFERTAS (Faz a mesma função do X de fechar o modal) 🔥 -->
+                        <button type="button" class="btn-ver-ofertas" data-bs-dismiss="modal">VER OFERTAS</button>
+                      </div>
+                    </div>
+
+                    <div class="bottom-bar-promo">
+                      <div class="bb-dot"></div>
+                      <div class="bb-text text-truncate">Oferta por tempo limitado &nbsp;·&nbsp; Não perca!</div>
+                      <div class="bb-site d-none d-sm-block">fitney.com.br</div>
+                    </div>
+                  </div>
+                  <!-- FIM DO SEU BANNER -->
+
+                </div>
+              </div>
+            </div>
+        `;
+        document.body.appendChild(modalContainer);
+
+        // 3. EXIBIR O MODAL (Aguarda 1 segundo após o site carregar)
+        setTimeout(function() {
+            var modalEl = document.getElementById('modalPromocao');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                var modalInstance = new bootstrap.Modal(modalEl);
+                modalInstance.show();
+                sessionStorage.setItem('promoDiaDasMaesVista', 'true');
+                
+                // 🔥 CORREÇÃO APLICADA: Força a remoção da tela preta e restaura a rolagem ao fechar
+                modalEl.addEventListener('hidden.bs.modal', function () {
+                    // Remove todas as películas pretas que o Bootstrap possa ter deixado presas
+                    var backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(function(b) { b.remove(); });
+                    
+                    // Restaura a rolagem do corpo da loja
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    
+                    // Remove o container do modal da página (limpa a memória)
+                    if (modalContainer && modalContainer.parentNode) {
+                        modalContainer.parentNode.removeChild(modalContainer);
+                    }
+                });
+            }
+        }, 1000); 
+    }
+}
+
+// INJEÇÃO: Associa o gatilho ao evento window.onload sem apagar as funções originais
+(function() {
+    // Salva a função onload original (se existir)
+    var originalOnLoad = window.onload;
+    
+    window.onload = function(e) {
+        // Executa o que já existia antes
+        if (originalOnLoad) {
+            originalOnLoad(e);
+        }
+        // Dispara a nova função promocional 100% injetada via JS
+        injetarEExibirPromocao();
+    };
+})();
+
 /**=================================================================================*/
