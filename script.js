@@ -2293,7 +2293,7 @@ function mostrarAvisoFlutuante(mensagem, cor = 'success') {
 // =================================================================================
 // GATILHO E INJEÇÃO DO MODAL PROMOCIONAL 100% VIA JAVASCRIPT (NOVA DEMANDA)
 // =================================================================================
-
+/*
 function injetarEExibirPromocao() {
     // Utiliza sessionStorage para garantir que só mostre 1 vez por visita
     var promoJaVista = sessionStorage.getItem('promoDiaDasMaesVista');
@@ -2303,12 +2303,12 @@ function injetarEExibirPromocao() {
         // 1. INJETAR TODO O CSS DIRETAMENTE NO <HEAD> DA PÁGINA
         var styleElement = document.createElement('style');
         styleElement.innerHTML = `
-            /* =================================================================================
+            // =================================================================================
                MODAL PROMOCIONAL - CSS (NOVA DEMANDA)
-               ================================================================================= */
+            // =================================================================================
             @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,700;1,900&family=Barlow:wght@300;400;600&display=swap');
 
-            /* 🔥 CORREÇÃO: Força a película preta a ficar por cima do cabeçalho/busca 🔥 */
+            // 🔥 CORREÇÃO: Força a película preta a ficar por cima do cabeçalho/busca 🔥 //
             .modal-backdrop {
                 z-index: 999998 !important;
             }
@@ -2336,7 +2336,7 @@ function injetarEExibirPromocao() {
               box-sizing: border-box;
             }
 
-            /* grid */
+            // grid //
             .grid-promo {
               position: absolute; inset: 0;
               background-image:
@@ -2347,7 +2347,7 @@ function injetarEExibirPromocao() {
             }
             @keyframes gridShift { from{background-position:0 0,0 0} to{background-position:60px 60px,60px 60px} }
 
-            /* laser */
+            // laser //
             .banner-promo-custom .laser {
               position: absolute; left: 0; right: 0; height: 2px;
               background: linear-gradient(90deg, transparent 0%, var(--pink) 30%, var(--pink-mid) 70%, transparent 100%);
@@ -2356,7 +2356,7 @@ function injetarEExibirPromocao() {
             }
             @keyframes laserScan { 0%{top:-4px;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
 
-            /* diagonal pink block */
+            // diagonal pink block //
             .banner-promo-custom .diagonal-block {
               position: absolute; top: -80px; right: -60px;
               width: 50%; height: 700px;
@@ -2365,7 +2365,7 @@ function injetarEExibirPromocao() {
               clip-path: polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%);
             }
 
-            /* pink glow */
+            // pink glow //
             .banner-promo-custom .pink-glow {
               position: absolute; top: -100px; right: -120px;
               width: 580px; height: 800px;
@@ -2375,7 +2375,7 @@ function injetarEExibirPromocao() {
             }
             @keyframes glowPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.65;transform:scale(1.07)} }
 
-            /* logo */
+            // logo //
             .banner-promo-custom .logo-area {
               position: absolute; top: 50%; right: 20px;
               transform: translateY(-50%);
@@ -2389,20 +2389,20 @@ function injetarEExibirPromocao() {
               to{opacity:1;transform:translateY(-50%) scale(1)}
             }
 
-            /* top accent */
+            // top accent //
             .banner-promo-custom .top-accent {
               position: absolute; top: 0; left: 0; right: 0; height: 4px;
               background: linear-gradient(90deg, var(--pink) 0%, var(--pink-mid) 40%, transparent 100%);
               box-shadow: 0 0 14px var(--pink-glow); z-index: 20;
             }
 
-            /* corners */
+            // corners //
             .banner-promo-custom .corner { position: absolute; width: 18px; height: 18px; z-index: 15; }
             .banner-promo-custom .corner.tl { top: 14px; left: 14px; border-top: 2px solid var(--pink); border-left: 2px solid var(--pink); }
             .banner-promo-custom .corner.tr { top: 14px; right: 14px; border-top: 2px solid var(--pink); border-right: 2px solid var(--pink); }
             .banner-promo-custom .corner.bl { bottom: 52px; left: 14px; border-bottom: 2px solid var(--pink); border-left: 2px solid var(--pink); }
 
-            /* left content */
+            // left content //
             .left-promo {
                 position: relative;
                 z-index: 10;
@@ -2476,7 +2476,7 @@ function injetarEExibirPromocao() {
                 letter-spacing: 1px;
             }
             
-            /* Novo botão VER OFERTAS (Inicia oculto no Desktop) */
+            // Novo botão VER OFERTAS (Inicia oculto no Desktop) //
             .btn-ver-ofertas {
                 display: none;
                 margin-top: 20px;
@@ -2498,7 +2498,7 @@ function injetarEExibirPromocao() {
                 transform: scale(0.95);
             }
 
-            /* bottom bar */
+            // bottom bar //
             .bottom-bar-promo {
               position:absolute; bottom:0; left:0; right:0; height:44px;
               background:rgba(255,31,120,0.07); border-top:1px solid rgba(255,31,120,0.18);
@@ -2522,7 +2522,7 @@ function injetarEExibirPromocao() {
                 letter-spacing: 4px;
                 text-transform: uppercase;
             }
-            /* badge */
+            // badge //
             .badge-promo {
               position:absolute; top:24px; right:24px; z-index:15;
               width:88px; height:88px; border-radius:50%;
@@ -2539,9 +2539,9 @@ function injetarEExibirPromocao() {
             @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
             @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
 
-            /* =========================================
+            // =========================================
                RESPONSIVIDADE (MOBILE) AJUSTADA
-               ========================================= */
+               ========================================= //
             @media (max-width: 768px) {
               .left-promo {
                 width: 100%;
@@ -2554,22 +2554,22 @@ function injetarEExibirPromocao() {
                 right: -50%;
               }
               .banner-promo-custom .logo-area {
-                opacity: 0.85 !important; /* Aumentado a opacidade da foto de fundo para ficar mais viva */
+                opacity: 0.85 !important; // Aumentado a opacidade da foto de fundo para ficar mais viva //
                 height: 120px;
                 right: -20px;
                 top: 60%;
               }
               .banner-promo-custom .brand { font-size: 70px; } 
               
-              /* Tratamento das fontes que você aumentou no Desktop */
+              // Tratamento das fontes que você aumentou no Desktop //
               .promo-eyebrow { font-size: 18px; margin-bottom: 10px; line-height: 1.2; }
               .promo-desc { font-size: 11px; margin-bottom: 5px; }
               .tag-text { font-size: 12px; }
 
-              /* 🔥 NOVO: Margem solicitada somente no mobile 🔥 */
+              // 🔥 NOVO: Margem solicitada somente no mobile 🔥 //
               .promo-section { margin-bottom: 141px; }
               
-              /* Ajuste do agrupamento promo-big */
+              // Ajuste do agrupamento promo-big //
               .promo-big { justify-content: center; flex-wrap: wrap; align-items: baseline; gap: 4px; }
               .promo-num { font-size: 80px; }
               .promo-pct { font-size: 40px; }
@@ -2578,27 +2578,27 @@ function injetarEExibirPromocao() {
               .badge-promo .badge-txt { font-size: 6px; letter-spacing: 1px; }
               .badge-promo .badge-icon { font-size: 14px; }
               
-              /* Tratamento do rodapé */
+              // Tratamento do rodapé //
               .bottom-bar-promo { padding: 0 15px; justify-content: center;}
               .bb-text { font-size: 11px; white-space: normal; line-height: 1.2; text-align: center; }
               
               .validity { flex-direction: column; gap: 6px; }
 
-              /* 🔥 CORREÇÕES APLICADAS AQUI 🔥 */
+              // 🔥 CORREÇÕES APLICADAS AQUI 🔥 //
               
-              /* 1. Melhora a cor do "VÁLIDO" para ficar legível por cima do fundo rosa */
+              // 1. Melhora a cor do "VÁLIDO" para ficar legível por cima do fundo rosa //
               .validity-pill {
                   color: #ffffff !important;
                   border-color: rgba(255, 255, 255, 0.6) !important;
                   background: rgba(255, 255, 255, 0.15) !important;
               }
 
-              /* 2. Oculta o X no celular */
+              // 2. Oculta o X no celular //
               .close-desktop-only { 
                   display: none !important; 
               }
 
-              /* 3. Mostra o botão de "VER OFERTAS" apenas no celular */
+              // 3. Mostra o botão de "VER OFERTAS" apenas no celular //
               .btn-ver-ofertas { 
                   display: block; 
                   width: 90%; 
@@ -2715,7 +2715,8 @@ function injetarEExibirPromocao() {
         }, 1000); 
     }
 }
-
+->
+*/
 // INJEÇÃO: Associa o gatilho ao evento window.onload sem apagar as funções originais
 (function() {
     // Salva a função onload original (se existir)
