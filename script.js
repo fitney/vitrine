@@ -503,6 +503,7 @@ function criarCardProduto(p) {
 
   // 4. Montagem do HTML do Card
   // INJEÇÃO: Estilos condicionais (opacidade e filtro PB) removidos do 'img' para itens esgotados conforme solicitado.
+  // INJEÇÃO SEO IMAGENS: Melhoria do atributo 'alt' e adição do atributo 'title' para rastreamento do Google
   return `
     <div class="col-6 col-md-4 col-lg-3 mb-4">
       <div class="card card-produto h-100 border-0 shadow-sm" onclick="verProduto('${safeId(p.id)}')" style="cursor:pointer; overflow: hidden; ${isEsgotado ? 'opacity: 0.8;' : ''}">
@@ -512,7 +513,8 @@ function criarCardProduto(p) {
           <img ${obterAtributosImagem(p.id, fotoOriginal, false, p.idOtimizado)} 
             class="card-img-top object-fit-cover" 
             loading="lazy" 
-            alt="${p.nome}" 
+            alt="Comprar ${p.nome} - Categoria ${p.categoria || 'Moda'}" 
+            title="${p.nome}"
             referrerpolicy="no-referrer">
           
           ${htmlOferta}
@@ -2051,6 +2053,35 @@ function renderizarDetalhesProduto(p) {
     ? fotos.map(function(url) { return processarImg(url, true); }) 
     : ['https://via.placeholder.com/600x600?text=Sem+Foto'];
 
+  // --- INJEÇÃO SEO IMAGENS: Lógica para extrair a imagem principal para o Schema.org ---
+  var urlImagemParaGoogle = "";
+  if (p.idOtimizado && p.idOtimizado.length > 0) {
+      var idLimpo = String(p.idOtimizado[0]).trim();
+      if (idLimpo.startsWith('/')) idLimpo = idLimpo.substring(1);
+      var caminhoFinal = idLimpo.includes('.') ? idLimpo : idLimpo + IMG_CONFIG.extensao;
+      urlImagemParaGoogle = IMG_CONFIG.basePath + '/' + IMG_CONFIG.zoomFolder + '/' + caminhoFinal;
+  } else if (fotosProcessadas.length > 0) {
+      urlImagemParaGoogle = fotosProcessadas[0];
+  }
+
+  // --- INJEÇÃO SEO IMAGENS: Gerador de Rich Snippets (Schema.org) ---
+  var schemaJSON = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": p.nome.replace(/"/g, '\\"'),
+      "image": [ urlImagemParaGoogle ],
+      "description": p.descricao ? p.descricao.replace(/\n/g, ' ').replace(/"/g, '\\"').substring(0, 300) : "Produto " + p.nome,
+      "sku": p.id,
+      "offers": {
+          "@type": "Offer",
+          "url": window.location.href,
+          "priceCurrency": "BRL",
+          "price": precoFinal,
+          "availability": isEsgotado ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+      }
+  };
+  var htmlSchema = `<script type="application/ld+json">${JSON.stringify(schemaJSON)}</script>`;
+
   // --- INJEÇÃO: LÓGICA CONDICIONAL DE ESTOQUE E CORES DOS BOTÕES ---
   var htmlOpcoesCompra = "";
   if (isEsgotado) {
@@ -2089,8 +2120,7 @@ function renderizarDetalhesProduto(p) {
             style="display:none; transition: all 0.3s; background-color: #FF4F95; border-color: #FF4F95; color: #FFFFFF;">
             <i class="bi bi-cart-plus me-2"></i> ADICIONAR AO CARRINHO
           </a>
-			<!-- 🚀 AJUSTE VISUAL: O link agora tem pistas claras de interatividade -->
-          <div class="text-center mt-4">
+			<div class="text-center mt-4">
             <a href="javascript:void(0)" onclick="abrirModalAviso('${safeId(p.id)}')" 
                class="text-muted small text-decoration-underline" 
                style="transition: 0.3s; cursor: pointer; display: inline-block;" 
@@ -2105,7 +2135,7 @@ function renderizarDetalhesProduto(p) {
 
   // 🚀 ALTERAÇÃO DE LAYOUT (Geração do HTML com Ordem Invertida)
   divConteudo.innerHTML = `
-    <div class="col-md-5">
+    ${htmlSchema} <div class="col-md-5">
       <div id="pdp-carousel" class="carousel slide border rounded bg-white shadow-sm">
         
         <div class="carousel-inner">
@@ -2113,11 +2143,14 @@ function renderizarDetalhesProduto(p) {
             var activeClass = (i === 0) ? 'active' : '';
             var idOtimizadoUnico = (p.idOtimizado && p.idOtimizado[i]) ? p.idOtimizado[i] : null;
 
+            // INJEÇÃO SEO IMAGENS: Adicionado 'alt' dinâmico e 'title' nas fotos do carrossel
             return `
               <div class="carousel-item ${activeClass}">
                 <div class="ratio" style="--bs-aspect-ratio: 125%; background-color: #fff;">
                   <img ${obterAtributosImagem(p.id, urlDrive, false, idOtimizadoUnico)} 
                       class="object-fit-cover" 
+                      alt="Foto ${i + 1} do produto ${p.nome}"
+                      title="${p.nome}"
                       style="width: 100%; height: 100%; cursor: zoom-in;" 
                       onclick="abrirZoomModal('${safeId(p.id)}', ${i})"
                       referrerpolicy="no-referrer">
@@ -2141,7 +2174,6 @@ function renderizarDetalhesProduto(p) {
     </div>
 
     <div class="col-md-7 ps-md-4">
-      <!-- 🚀 CORREÇÃO: Aplicado a cor #FF4F95 no botão de Voltar -->
       <button onclick="voltarParaHome()" class="btn btn-link text-decoration-none p-0 mb-2 small fw-bold" style="color: #FF4F95 !important;">
        <i class="bi bi-arrow-left"></i> Voltar para a loja
       </button>
@@ -2162,12 +2194,10 @@ function renderizarDetalhesProduto(p) {
       </div>
       ` : ''}
 
-      <!-- 🚀 ALTERAÇÃO 1: Bloco de Compra e Carrinho vem ANTES da descrição -->
       <div class="card p-3 border-0 bg-light shadow-sm mb-4">
          ${htmlOpcoesCompra}
       </div>
 
-      <!-- 🚀 ALTERAÇÃO 2: Descrição movida para DEPOIS do Bloco de Compra -->
       <div class="mb-4">
         <h6 class="fw-bold small text-uppercase text-muted border-bottom pb-1">Descrição</h6>
         <p class="text-secondary small mt-2" style="white-space: pre-line; line-height: 1.5;">
