@@ -1,3 +1,2 @@
 User-agent: *
-# Bloquear uma subpasta inteira e todo o seu conteúdo.
-Disallow: /img/
+Allow: /img/
