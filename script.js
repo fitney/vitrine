@@ -344,10 +344,14 @@ function inicializarInterface() {
 // Analisa os parâmetros da URL para decidir entre exibir a vitrine ou um produto específico.
 function verificarRotaURL() {
   var parametros = new URLSearchParams(window.location.search);
-  var idProdutoURL = parametros.get('p');
+  var parametroURL = parametros.get('p');
   var banner = document.getElementById('banner-home');
   
-  if (idProdutoURL) {
+  if (parametroURL) {
+    // Isola os 14 dígitos do SKU, caso a URL venha no formato amigável "nome-do-produto-12345678901234"
+    var matchSKU = parametroURL.match(/\d{14}$/);
+    var idProdutoURL = matchSKU ? matchSKU[0] : parametroURL;
+
     // --- 1. MODIFICAÇÃO: ESCONDER AO CARREGAR PRODUTO ---
     // Se entrar direto pelo link do produto, força a classe d-none
     if (banner) {
@@ -362,6 +366,18 @@ function verificarRotaURL() {
     }
     renderizarVitrine(bancoDeDados);
   }
+}
+
+// Nova função utilitária para SEO - ADICIONE EM QUALQUER LUGAR DO ARQUIVO
+function gerarSlugSEO(texto) {
+    if (!texto) return "";
+    return texto.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+        .replace(/\s+/g, '-')           // Troca espaços por hífen
+        .replace(/[^\w\-]+/g, '')       // Remove caracteres especiais
+        .replace(/\-\-+/g, '-')         // Remove hífens duplicados
+        .replace(/^-+/, '')             // Remove hífen do início
+        .replace(/-+$/, '');            // Remove hífen do fim
 }
 
 /**=================================================================================*/
@@ -1887,6 +1903,7 @@ window.onload = function() {
  */
 
 // Gerencia a transição para a visualização de detalhes de um produto, ajustando histórico, visibilidade de banners e colunas de layout.
+// Gerencia a transição para a visualização de detalhes de um produto, ajustando histórico, visibilidade de banners e colunas de layout.
 function verProduto(id, adicionarAoHistorico) {
   if (adicionarAoHistorico === undefined) {
     adicionarAoHistorico = true;
@@ -1902,7 +1919,10 @@ function verProduto(id, adicionarAoHistorico) {
 
   // 2. Gerencia o histórico do navegador (botão voltar)
   if (adicionarAoHistorico) {
-    window.history.pushState({ view: 'pdp', id: id }, "", "?p=" + id);
+    // Cria URL amigável usando o nome limpo e os 14 dígitos do SKU no final
+    var slug = gerarSlugSEO(p.nome);
+    var urlSEO = slug ? "?p=" + slug + "-" + p.id : "?p=" + p.id;
+    window.history.pushState({ view: 'pdp', id: id }, p.nome, urlSEO);
   }
 
   // --- 3. MODIFICAÇÃO CRUCIAL: ESCONDER O BANNER ---
@@ -1937,15 +1957,27 @@ function verProduto(id, adicionarAoHistorico) {
     </div>
   `;
   
-// 8. Renderiza o conteúdo PRIMEIRO
+  // 8. Renderiza o conteúdo PRIMEIRO
   renderizarDetalhesProduto(p);
 
-  // 🚀 9. FORÇA A PÁGINA PARA O TOPO (A CORREÇÃO ESTÁ AQUI)
-  // O atraso de 50ms garante que o HTML do produto já existe, impedindo que o navegador se perca na altura.
+  // --- INJEÇÃO DE SEO DINÂMICO ---
+  // Limpa o nome caso o código numérico esteja vindo colado no cadastro da planilha
+  var nomeAjustado = p.nome.replace(/\s?-?\s?\d{14}$/, '').trim();
+  document.title = nomeAjustado + " | Vitrine Fitney";
+  
+  var metaDescription = document.querySelector('meta[name="description"]');
+  if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.name = "description";
+      document.head.appendChild(metaDescription);
+  }
+  // Remove quebras de linha e limita a 155 caracteres (padrão Google)
+  var descLimpa = p.descricao ? p.descricao.replace(/\n/g, " ").substring(0, 155) : "Compre " + nomeAjustado + " na Fitney. Coleção 2026 com estilo e conforto em cada detalhe.";
+  metaDescription.content = descLimpa;
+
+  // 🚀 9. FORÇA A PÁGINA PARA O TOPO
   setTimeout(function() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    
-    // Trava de segurança extra para celulares (iPhone/Safari) que tentam ignorar o scrollTo
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
   }, 50);
