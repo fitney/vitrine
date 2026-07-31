@@ -44,13 +44,122 @@
 	  }
 	</script>
 
+<!-- =================================================================================
+     VÍDEO PROMOCIONAL REBRANDING (Inicia após o preloader)
+     ================================================================================= -->
+<div id="promo-rebrand-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #141414; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease;">
+    
+    <video id="vid-promo-rebrand" playsinline style="width: 100%; height: 100%; max-height: 100vh; object-fit: contain;">
+        <!-- SUBSTITUA O SRC ABAIXO PELO CAMINHO DO SEU VÍDEO DE REBRANDING -->
+        <source src="./img/rebrand.mp4" type="video/mp4">
+    </video>
+
+    <!-- Botões de Controle na base do vídeo -->
+    <div style="position: absolute; bottom: 40px; display: flex; gap: 15px; z-index: 9999;">
+        <button id="btn-som-promo" style="background: rgba(20, 20, 20, 0.6); color: #fff; border: 1px solid #fff; padding: 10px 20px; border-radius: 30px; font-family: 'Barlow', sans-serif; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s;">
+            <i class="bi bi-volume-mute-fill"></i> Ativar Som
+        </button>
+        
+        <button id="btn-pular-promo" style="background: #FF4F95; color: #fff; border: none; padding: 10px 20px; border-radius: 30px; font-weight: 600; font-family: 'Barlow', sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 79, 149, 0.4); transition: 0.3s;">
+            Pular Vídeo ⏭
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var preloaderOriginal = document.getElementById("preloader");
+    var promoOverlay = document.getElementById("promo-rebrand-overlay");
+    var vidPromo = document.getElementById("vid-promo-rebrand");
+    var btnPular = document.getElementById("btn-pular-promo");
+    var btnSom = document.getElementById("btn-som-promo");
+
+    // --- ADICIONADO: CONTROLE DE DATA DE VALIDADE DA CAMPANHA ---
+    // A campanha inicia em 01/08/2026 e dura exatamente 60 dias.
+    var dataAtual = new Date().getTime();
+    
+    // Configura o início para: Ano 2026, Mês 7 (Agosto no JS), Dia 1, 00h:00m:00s
+    var dataInicio = new Date(2026, 7, 1, 0, 0, 0).getTime();
+    
+    // Adiciona 60 dias (em milissegundos) à data de início
+    var dataFim = dataInicio + (60 * 24 * 60 * 60 * 1000); 
+
+    if (dataAtual < dataInicio || dataAtual > dataFim) {
+        // Se estiver fora da validade, destrói o modal do vídeo silenciosamente e encerra o script.
+        if (promoOverlay) {
+            promoOverlay.style.display = 'none';
+        }
+        return; 
+    }
+    // ------------------------------------------------------------
+
+    // Função para encerrar o vídeo e mostrar a loja suavemente
+    function encerrarVideoPromo() {
+        promoOverlay.style.opacity = '0';
+        setTimeout(function() {
+            promoOverlay.style.display = 'none';
+            vidPromo.pause();
+        }, 800);
+    }
+
+    // 1. Se o usuário clicar em Pular
+    btnPular.addEventListener("click", encerrarVideoPromo);
+
+    // 2. Se o vídeo acabar naturalmente
+    vidPromo.addEventListener("ended", encerrarVideoPromo);
+
+    // 3. Controle do botão de Som
+    btnSom.addEventListener("click", function() {
+        if (vidPromo.muted) {
+            vidPromo.muted = false;
+            btnSom.innerHTML = '<i class="bi bi-volume-up-fill"></i> Silenciar';
+            btnSom.style.background = 'rgba(255,255,255,0.9)';
+            btnSom.style.color = '#000';
+        } else {
+            vidPromo.muted = true;
+            btnSom.innerHTML = '<i class="bi bi-volume-mute-fill"></i> Ativar Som';
+            btnSom.style.background = 'rgba(20, 20, 20, 0.6)';
+            btnSom.style.color = '#fff';
+        }
+    });
+
+    // 4. O "Olheiro": Vigia o preloader original para saber a hora exata de dar o Play
+    if (preloaderOriginal && promoOverlay && vidPromo) {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                // Verifica se o preloader original sumiu
+                if (preloaderOriginal.style.display === 'none' || preloaderOriginal.style.opacity === '0') {
+                    
+                    // O navegador exige que comece no mudo para permitir o play automático sem clique prévio
+                    vidPromo.muted = true; 
+                    
+                    var playPromise = vidPromo.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(function(error) {
+                            // Se o navegador bloquear por modo de economia de dados da Apple ou afins, pula direto pra loja
+                            console.log("Autoplay de vídeo bloqueado pelo navegador.", error);
+                            encerrarVideoPromo();
+                        });
+                    }
+                    observer.disconnect(); // Para de vigiar o preloader
+                }
+            });
+        });
+
+        // Inicia a vigilância nos estilos do preloader
+        observer.observe(preloaderOriginal, { attributes: true, attributeFilter: ['style'] });
+    }
+});
+</script>
+<!-- ================================================================================= -->
+
     <div class="d-flex w-100" id="layout-global">
       <div id="conteudo-principal" class="flex-grow-1 overflow-hidden">
 		<nav class="navbar navbar-light bg-white shadow-sm sticky-top" style="z-index: 1100; height: 60px; padding: 0;">
 		  <div class="container d-flex align-items-center justify-content-between gap-1 flex-nowrap"> 
 			
 			<a class="navbar-brand me-0 flex-shrink-0" href="javascript:void(0)" onclick="voltarParaHome()">
-			  <img id="logo-loja" src="" alt="Logo" height="30" style="object-fit: contain;">
+			  <img src="./img/full_logo.png" alt="Logo" height="45" style="object-fit: contain;">
 			</a>
 
 			<div class="flex-grow-1 px-1" style="max-width: 600px; min-width: 0;">
@@ -75,14 +184,46 @@
 		</nav>
         <div class="container py-3 py-lg-5">
           <div class="container-fluid px-0 mb-5">
-            <div id="banner-home" class="banner-hero rounded-4 d-flex align-items-center justify-content-center text-white text-center shadow" 
-                style="background-size: cover; background-position: center; height: 300px; background-color: #333; position: relative; overflow: hidden;">
-              
-              <div style="z-index: 2;">
-                <h1 id="banner-titulo" class="fw-bold display-4 text-uppercase">Coleção 2026</h1>
-                <p id="banner-subtitulo" class="lead">Estilo e conforto em cada detalhe</p>
-              </div>
-            </div>
+			<!-- =================================================================================
+			 NOVO BANNER VITRINE PRINCIPAL - ESTILO PREMIUM
+			 ================================================================================= -->
+			<div class="fitney-main-banner">
+                
+                <!-- Fita/Onda Cruzando a Tela (Movida para fora da div fmb-right para cruzar o banner todo) -->
+                <svg class="fmb-ribbon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" preserveAspectRatio="none">
+                    <!-- Fita Larga e Suave -->
+                    <path d="M -50 480 C 400 520, 600 350, 1300 250" fill="none" stroke="#ff1f78" stroke-width="45" stroke-linecap="round" opacity="0.85"/>
+                    <!-- Fita Fina Sobreposta (Efeito de elegância) -->
+                    <path d="M 700 340 C 900 340, 1050 260, 1300 200" fill="none" stroke="#ff4d9a" stroke-width="20" stroke-linecap="round" opacity="0.9"/>
+                </svg>
+				
+                <!-- Lado Esquerdo (Escuro) -->
+				<div class="fmb-left">
+					<!-- Marca d'água gigante na esquerda -->
+					
+					<div class="fmb-content">
+						<div class="fmb-eyebrow">
+							<span class="fmb-line"></span> MODA FITNESS FEMININA
+						</div>
+						
+						<h1 class="fmb-title">Elegância que<br>se <span class="fmb-italic">move</span> com você</h1>
+						
+						<p class="fmb-desc">
+							Peças desenhadas para acompanhar cada treino, cada passo e cada conquista.
+						</p>
+					</div>
+				</div>
+
+				<!-- Lado Direito (Claro) -->
+				<div class="fmb-right">
+					<!-- Logo de Assinatura no Canto Inferior Direito -->
+					<div class="fmb-logo-box">
+						<img src="./img/full_logo.png" class="fmb-logo-corner" alt="Logo FitNey">
+                        <!-- ADICIONADO: O texto restaurado abaixo da logo -->
+                        <div class="fmb-logo-text">TREINE COM CONFIANÇA E ESTILO</div>
+					</div>
+				</div>
+			</div>
           </div>
     
           <div class="row">
@@ -189,7 +330,7 @@
 				  <div class="d-flex justify-content-center justify-content-md-end">
 					<a id="footer-insta" href="#" target="_blank" class="text-decoration-none d-flex align-items-center gap-2">
 					  <i class="bi bi-instagram"></i>
-					  <span class="small colorlink">@fitney_oficial</span>
+					  <span class="small colorlink">@usefitney</span>
 					</a>
 				  </div>
 				</div>

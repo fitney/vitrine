@@ -1,3 +1,6 @@
+/* IMPORTANTE: @import sempre deve ficar na PRIMEIRA linha do arquivo CSS */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
   /* =================================================================================
      1. ESTRUTURA GLOBAL E LAYOUT (MERGE: SITE + CARRINHO LATERAL)
      ================================================================================= */
@@ -23,7 +26,7 @@
     background-color: #f8f9fa;
   }
 
-  /* IMPORTANTE: Remova restrições dos pais */
+  /* IMPORTANTE: Remova restrições dos parents */
   #conteudo-principal, #layout-global {
     overflow: visible !important; /* Se estiver 'hidden' ou 'auto', o sticky morre */
   }
@@ -558,7 +561,7 @@
     text-align-last: center !important;
     padding: 0 15px !important;
   }
-
+}
   
 
 @media (max-width: 991px) {
@@ -624,16 +627,241 @@
   }
 
 /* =================================================================================
-   CORREÇÃO DEFINITIVA DO BACKDROP (TELA PRETA DO MODAL)
+   NOVO BANNER VITRINE PRINCIPAL - CSS (CORRIGIDO E TRAVADO)
    ================================================================================= */
-.modal-backdrop {
-    z-index: 1040 !important;
-}
-.modal {
-    z-index: 1055 !important;
-}  
 
-/* 3. Blindagem extra apenas para o modal de Aviso, garantindo que ele fure a tela preta */
-#modalAvisoEstoque {
-    z-index: 1060 !important;
+/* Oculta o banner automaticamente quando a tela de Produto é aberta */
+body:has(#view-produto[style*="display: block"]) .fitney-main-banner {
+    display: none !important;
+}
+
+.fitney-main-banner {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 350px; /* ALTERADO: Altura reduzida para 350px conforme solicitado */
+  background-color: #f4f4f9; 
+  overflow: hidden;
+  margin-bottom: 40px;
+  border-radius: 8px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.fitney-main-banner * {
+  box-sizing: border-box;
+}
+
+/* A Fita Cruzando a Tela Globalmente */
+.fmb-ribbon {
+  position: absolute;
+  bottom: 0; 
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  z-index: 4; 
+  pointer-events: none;
+}
+
+/* Mantém a espessura grossa da fita mesmo ao espremer no celular */
+.fmb-ribbon path {
+    vector-effect: non-scaling-stroke !important;
+}
+
+/* Força o desenho perfeito da onda pelo CSS com cores Rosa Bebê Elegante */
+.fmb-ribbon path:nth-of-type(1) {
+    d: path("M -50 470 C 390 540, 740 290, 1290 240") !important;
+    stroke-width: 45px !important;
+    stroke: #FADADD !important; 
+}
+.fmb-ribbon path:nth-of-type(2) {
+    d: path("M -50 490 C 440 530, 790 260, 1290 200") !important;
+    stroke-width: 15px !important;
+    stroke: #F4B8C8 !important; 
+}
+
+/* --- LADO ESQUERDO (Escuro Premium) --- */
+.fmb-left {
+  position: relative;
+  flex: 0 0 50%; 
+  max-width: 50%; 
+  height: 100%; 
+  background-color: #2b2829; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 40px 60px 80px;
+  z-index: auto; 
+}
+
+/* Nova marca d'água de imagem no fundo escuro */
+.fmb-watermark-img {
+  position: absolute;
+  top: 50%;
+  left: -5%;
+  transform: translateY(-50%);
+  width: 100%;
+  max-width: 800px;
+  max-height: 603px;
+  opacity: 0.15; 
+  pointer-events: none;
+  z-index: 5; 
+  object-fit: contain;
+}
+
+.fmb-content {
+  position: relative;
+  z-index: 15;
+  max-width: 500px;
+}
+
+.fmb-eyebrow {
+  display: flex;
+  align-items: center;
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px;
+  font-weight: 700; 
+  color: #ffffff; 
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+}
+
+.fmb-line {
+  width: 40px;
+  height: 1px;
+  background-color: #FF4F95; 
+  margin-right: 15px;
+}
+
+.fmb-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #ffffff; 
+  margin-bottom: 25px;
+  margin-top: 0;
+}
+
+.fmb-title .fmb-italic {
+  font-style: italic;
+  color: #FF4F95; 
+}
+
+.fmb-desc {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 400; 
+  line-height: 1.6;
+  color: #ffffff; 
+  margin-bottom: 0;
+  max-width: 400px;
+}
+
+/* --- LADO DIREITO (Claro com Logo) --- */
+.fmb-right {
+  position: relative;
+  flex: 0 0 50%; 
+  max-width: 50%; 
+  height: 100%; 
+  background-color: #f5f4f0; 
+  z-index: auto; 
+}
+
+/* CAIXA DA LOGO (Canto inferior direito da referência) */
+.fmb-logo-box {
+  position: absolute;
+  bottom: 30px;
+  right: 40px;
+  z-index: 20; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+}
+
+/* Tamanho controlado para fazer a assinatura da referência */
+.fmb-logo-corner {
+  height: 150px !important; 
+  width: auto !important; 
+  max-width: 300px !important; 
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+/* Classe do texto restaurada e corrigida com a fonte de marca Barlow */
+.fmb-logo-text {
+  font-family: 'Barlow', sans-serif !important;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: #333333;
+  margin-top: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* =========================================
+   RESPONSIVIDADE (MOBILE)
+   ========================================= */
+@media (max-width: 992px) {
+  .fitney-main-banner {
+      flex-direction: column;
+      height: auto; /* No mobile a altura se ajusta ao conteúdo empilhado */
+      border-radius: 0;
+  }
+
+  .fmb-ribbon {
+      opacity: 0.8; 
+  }
+
+  .fmb-ribbon path:nth-of-type(2) {
+    d: path("M -50 490 C 440 530, 790 240, 1280 215") !important
+  }
+
+  .fmb-left {
+      flex: 0 0 100%; 
+      max-width: 100%; 
+      padding: 50px 20px;
+      align-items: center;
+      text-align: center;
+  }
+
+  .fmb-eyebrow {
+      justify-content: center;
+  }
+
+  .fmb-line {
+      display: none; 
+  }
+
+  .fmb-title {
+      font-size: 42px;
+  }
+
+  .fmb-desc {
+      text-align: center;
+      margin-bottom: 0;
+      color: #ffffff;
+      font-weight: 400;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      opacity: 1; 
+  }
+
+  .fmb-right {
+      flex: 0 0 100%; 
+      max-width: 100%; 
+      min-height: auto; 
+      background-color: #f5f4f0; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 40px 20px; 
+  }
+
+  .fmb-logo-box {
+      position: relative; 
+      bottom: auto; 
+      right: auto; 
+      transform: none; 
+  }
 }

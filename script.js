@@ -1819,7 +1819,7 @@ init: function() {
       // --- 3. RODAPÉ: TEXTOS E ESTILO ---
       const sobreEl = document.getElementById('footer-sobre');
       if (sobreEl) {
-        sobreEl.innerText = c.SOBRE_NOS || "";
+        sobreEl.innerHTML = c.SOBRE_NOS || "";
         sobreEl.style.textAlign = "justify";
         sobreEl.style.color = "#000";
       }
