@@ -786,6 +786,7 @@ body:has(#view-produto[style*="display: block"]) .fitney-main-banner {
   max-width: 300px !important; 
   object-fit: contain;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  padding-right: 70px
 }
 
 /* Classe do texto restaurada e corrigida com a fonte de marca Barlow */
@@ -864,4 +865,8 @@ body:has(#view-produto[style*="display: block"]) .fitney-main-banner {
       right: auto; 
       transform: none; 
   }
+  
+  .fmb-logo-corner {
+	 padding-right: 0px
+	}
 }
