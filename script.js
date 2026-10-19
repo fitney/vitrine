@@ -110,6 +110,51 @@ function safeId(id) {
     .replace(/"/g, '&quot;');// Escapa aspas duplas
 }
 
+// 🚀 MOTOR DE DATAS: ESQUENTA E BLACK NOVEMBER
+function getConfigOferta() {
+  const hoje = new Date();
+  const mes = hoje.getMonth() + 1; // getMonth é base 0
+  const dia = hoje.getDate();
+  
+  const isEsquenta = (mes === 10 && dia >= 18);
+  const isBlackNov = (mes === 11);
+  const isBlackSeason = isEsquenta || isBlackNov;
+  
+  return {
+    isBlack: isBlackSeason,
+    texto: isEsquenta ? "🔥 ESQUENTA BLACK" : (isBlackNov ? "🔥 BLACK NOV" : "<i class=\"bi bi-tag-fill me-1\"></i> OFERTA"),
+    classe: isBlackSeason ? "black-friday-shimmer text-white" : "bg-danger text-white"
+  };
+}
+
+// INJEÇÃO CSS: Efeito Shimmer Premium para a Black Friday
+(function() {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .black-friday-shimmer {
+      background-color: #111111 !important;
+      border: 1px solid #FF4F95 !important;
+      position: relative;
+      overflow: hidden;
+    }
+    .black-friday-shimmer::after {
+      content: "";
+      position: absolute;
+      top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 79, 149, 0.4), transparent);
+      animation: shimmerBF 2.5s infinite;
+      transform: skewX(-20deg);
+    }
+    @keyframes shimmerBF {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// Gerencia a lógica de carregamento híbrido entre servidor local e Google Drive.
+
 
 // Gerencia a lógica de carregamento híbrido entre servidor local e Google Drive.
 /**
@@ -441,20 +486,32 @@ function renderizarVitrine(listaProdutos) {
 
 // Gera o código HTML completo de um card individual de produto.
 function criarCardProduto(p) {
-  // 1. Cálculos de Preço
+  // 🚀 CHAMA O MOTOR DE DATAS PARA OS CARDS DA VITRINE
+  const configTag = getConfigOferta();
+
+  // 1. Cálculos de Preço e Travas Mestras
   var nVenda = v2n(p.valorVenda);
   var nPromo = v2n(p.valorPromo);
   var nPix = v2n(p.valorPix);
   
-  // INJEÇÃO: Utiliza a flag do backend (Dossiê) mantendo fallback original
-  var estaEmPromo = p.isPromoAtiva !== undefined ? p.isPromoAtiva : nPromo > 0;
-  var precoPrincipal = estaEmPromo ? nPromo : nVenda;
-  // INJEÇÃO: Flag local de estoque geral do produto
+  // Garante que a promo e o pix só existam se estiverem ligados na Master e se tiverem valor
+  var estaEmPromo = (p.isPromoAtiva !== undefined ? p.isPromoAtiva : nPromo > 0) && (nPromo > 0);
+  var temPix = (p.isPixAtivo !== undefined ? p.isPixAtivo : nPix > 0) && (nPix > 0);
+  
+  // Regra de Prioridade: PIX em destaque (se ativo), Cartão como secundário
+  var precoCartao = estaEmPromo ? nPromo : nVenda;
+  var precoDestaque = temPix ? nPix : precoCartao;
+  
+  // Cálculo do Percentual de Desconto baseado no Menor Preço (PIX ou Promo)
+  var percentualDesconto = 0;
+  if (nVenda > 0 && precoDestaque < nVenda) {
+    percentualDesconto = Math.floor(((nVenda - precoDestaque) / nVenda) * 100);
+  }
+
   var isEsgotado = p.estoque <= 0;
   
   // 2. Processamento da Imagem
   var fotoOriginal = (Array.isArray(p.todasFotos) && p.todasFotos.length > 0) ? p.todasFotos[0] : null;
-  // A variável 'urlFoto' não é estritamente necessária aqui pois usamos a função híbrida no <img>
 
   // 3. Processamento das Variações (Tamanhos)
   var variacoes = Array.isArray(p.variacoes) ? p.variacoes : [];
@@ -468,7 +525,6 @@ function criarCardProduto(p) {
 
   // Gera HTML dos badges de tamanho
   var htmlTamanhos = "";
-  // INJEÇÃO: Considerar também se o produto mestre não está esgotado
   if (!isEsgotado && tamanhosDisponiveis.length > 0) {
     htmlTamanhos = tamanhosDisponiveis.slice(0, 4).map(function(t) {
       return '<span class="badge bg-white text-secondary border fw-normal me-1" style="font-size: 0.6rem;">' + t + '</span>';
@@ -478,38 +534,41 @@ function criarCardProduto(p) {
       htmlTamanhos += '<span class="badge bg-light text-muted border fw-normal" style="font-size: 0.6rem;">+</span>';
     }
   } else {
-    // MODIFICAÇÃO: Badge vermelho com destaque conforme Dossiê
     htmlTamanhos = '<span class="badge bg-danger text-white border fw-bold px-2 py-1" style="font-size: 0.6rem; letter-spacing: 1px;">ESGOTADO</span>';
   }
 
-  // --- BALÃO FLUTUANTE DE OFERTA ---
-  var htmlOferta = estaEmPromo 
-    ? `<div class="position-absolute top-0 end-0 m-2 bg-danger text-white px-2 py-1 shadow rounded-pill fw-bold d-flex align-items-center justify-content-center" 
-            style="width: fit-content !important; height: auto !important; font-size: 0.65rem; z-index: 10;">
-         <i class="bi bi-tag-fill me-1"></i> OFERTA
-       </div>` 
+  // --- BALÕES FLUTUANTES DIRETOS ---
+  // 🚀 REGRA: "OFERTA" SEMPRE aparece na foto do card se a promoção normal estiver ligada. Dinâmico para Black Friday.
+  var htmlOfertaEsq = estaEmPromo 
+    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+    : '';
+    
+  // 🚀 CORREÇÃO BOOTSTRAP: O left: auto !important impede que a imagem puxe a tag para a esquerda.
+  var htmlDescontoDir = percentualDesconto > 0 
+    ? `<div class="position-absolute bg-dark text-white px-2 py-1 shadow rounded-3 fw-bold text-center" style="z-index: 10; top: 10px !important; right: 10px !important; left: auto !important; font-size: 0.65rem; min-width: 45px; width: fit-content !important; height: fit-content !important;">-${percentualDesconto}%</div>` 
     : '';
 
   // HTML do Preço Anterior (Riscado)
-  // INJEÇÃO: Prefixo "De:"
   var htmlPrecoAntigo = estaEmPromo 
     ? '<small class="text-decoration-line-through text-muted d-block" style="font-size: 0.7rem">De: ' + n2v(nVenda) + '</small>' 
     : '';
 
-  // INJEÇÃO: Montagem do HTML do PIX (Dossiê)
-  var htmlPix = p.isPixAtivo
-    ? `<div class="text-success fw-bold mt-1" style="font-size: 0.7rem;"><i class="bi bi-lightning-charge-fill"></i> ou ${n2v(nPix)} via PIX</div>` 
+  // Badge do PIX ao lado do preço
+  var htmlBadgePix = temPix 
+    ? `<span class="badge bg-success ms-1 px-1 py-0" style="font-size: 0.6rem;"><i class="bi bi-lightning-charge-fill"></i> PIX</span>` 
+    : '';
+
+  // HTML do Preço Secundário (Cartão)
+  var htmlSecundario = temPix
+    ? `<div class="text-secondary fw-bold mt-1" style="font-size: 0.7rem;"><i class="bi bi-credit-card"></i> ${n2v(precoCartao)} no cartão</div>` 
     : '';
 
   // 4. Montagem do HTML do Card
-  // INJEÇÃO: Estilos condicionais (opacidade e filtro PB) removidos do 'img' para itens esgotados conforme solicitado.
-  // INJEÇÃO SEO IMAGENS: Melhoria do atributo 'alt' e adição do atributo 'title' para rastreamento do Google
   return `
     <div class="col-6 col-md-4 col-lg-3 mb-4">
       <div class="card card-produto h-100 border-0 shadow-sm" onclick="verProduto('${safeId(p.id)}')" style="cursor:pointer; overflow: hidden; ${isEsgotado ? 'opacity: 0.8;' : ''}">
         
         <div class="position-relative ratio bg-white rounded-top border-bottom" style="--bs-aspect-ratio: 125%;">
-          
           <img ${obterAtributosImagem(p.id, fotoOriginal, false, p.idOtimizado)} 
             class="card-img-top object-fit-cover" 
             loading="lazy" 
@@ -517,7 +576,8 @@ function criarCardProduto(p) {
             title="${p.nome}"
             referrerpolicy="no-referrer">
           
-          ${htmlOferta}
+          ${htmlOfertaEsq}
+          ${htmlDescontoDir}
         </div>
 
         <div class="card-body p-2 d-flex flex-column">
@@ -533,10 +593,13 @@ function criarCardProduto(p) {
           ${!isEsgotado ? `
           <div class="price-info mb-2">
             ${htmlPrecoAntigo}
-            <span class="fw-bold text-primary" style="font-size: 1rem;">
-              ${estaEmPromo ? 'Por: ' : ''}${n2v(precoPrincipal)}
-            </span>
-            ${htmlPix}
+            <div class="d-flex align-items-center">
+              <span class="fw-bold text-primary" style="font-size: 1.1rem;">
+                ${n2v(precoDestaque)}
+              </span>
+              ${htmlBadgePix}
+            </div>
+            ${htmlSecundario}
           </div>
           ` : ''}
 
@@ -1130,11 +1193,109 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
     
     btn.onclick = function(e) {
       e.preventDefault();
-      const precoParaCarrinho = v2n(p.valorPromo) > 0 ? p.valorPromo : p.valorVenda;
+      // 🚀 PRECIFICAÇÃO DINÂMICA NO CARRINHO
+      const variacaoSelecionada = p.variacoes.find(v => v.cor === cor && v.tamanho === tam);
+      const vVendaVar = variacaoSelecionada.valorVendaFinal || p.valorVenda;
+      const vPromoVar = variacaoSelecionada.valorPromoFinal || p.valorPromo;
+      
+      // Verifica a trava mestra do produto
+      const isPromoAtivaMaster = p.isPromoAtiva !== undefined ? p.isPromoAtiva : (v2n(p.valorPromo) > 0);
+      const precoFinalVar = (isPromoAtivaMaster && v2n(vPromoVar) > 0) ? vPromoVar : vVendaVar;
+
       const fotoParaCarrinho = (p.todasFotos && p.todasFotos.length > 0) ? processarImg(p.todasFotos[0], false) : "";
-      adicionarAoCarrinho(p.id, p.nome, precoParaCarrinho, cor, tam, fotoParaCarrinho, idCor, idTam);
+      adicionarAoCarrinho(p.id, p.nome, precoFinalVar, cor, tam, fotoParaCarrinho, idCor, idTam);
       selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, idTam);
     };
+  }
+
+  // 🚀 PRECIFICAÇÃO DINÂMICA NA TELA (ATUALIZAÇÃO EM TEMPO REAL)
+  const variacaoSelecionada = p.variacoes.find(v => v.cor === cor && v.tamanho === tam);
+  if (variacaoSelecionada) {
+    const vVendaVar = variacaoSelecionada.valorVendaFinal || p.valorVenda;
+    const vPromoVar = variacaoSelecionada.valorPromoFinal || p.valorPromo;
+    const vPixVar = variacaoSelecionada.valorPixFinal || p.valorPix;
+    
+    // Verifica as travas mestras do produto para não ligar nada indevidamente
+    const isPromoAtivaMaster = p.isPromoAtiva !== undefined ? p.isPromoAtiva : (v2n(p.valorPromo) > 0);
+    const isPixAtivoMaster = p.isPixAtivo !== undefined ? p.isPixAtivo : (v2n(p.valorPix) > 0);
+
+    const isPromoVar = isPromoAtivaMaster && (v2n(vPromoVar) > 0);
+    const isPixVar = isPixAtivoMaster && (v2n(vPixVar) > 0);
+    
+    const precoCartaoVar = isPromoVar ? vPromoVar : vVendaVar;
+    const precoDestaqueVar = isPixVar ? vPixVar : precoCartaoVar;
+    
+    let parcVar = 1;
+    if (precoCartaoVar >= 350) parcVar = 3;
+    else if (precoCartaoVar >= 200) parcVar = 2;
+    
+    let txtParcVar = "";
+    if (parcVar > 1) {
+      txtParcVar = `em até ${parcVar}x de ${n2v(precoCartaoVar / parcVar)} sem juros`;
+    } else {
+      txtParcVar = isPixVar ? `à vista` : `à vista por ${n2v(precoCartaoVar)}`;
+    }
+    
+    // Cálculo do Desconto Dinâmico (Ao mudar variação)
+    let percentualVar = 0;
+    if (vVendaVar > 0 && precoDestaqueVar < vVendaVar) {
+      percentualVar = Math.floor(((vVendaVar - precoDestaqueVar) / vVendaVar) * 100);
+    }
+
+    const elPrecoAtual = document.getElementById('preco-atual-pdp');
+    const elPrecoAntigo = document.getElementById('preco-antigo-pdp');
+    const elBadgeOferta = document.getElementById('badge-oferta-pdp');
+    const elBadgeDesconto = document.getElementById('badge-desconto-pdp');
+    const elBadgePix = document.getElementById('badge-pix-pdp');
+    const elValorCartaoTxt = document.getElementById('valor-cartao-txt');
+    const elTextoParcelas = document.getElementById('texto-parcelas-pdp');
+    
+    if (elPrecoAtual) elPrecoAtual.innerText = n2v(precoDestaqueVar);
+    
+    if (elPrecoAntigo) {
+      if (percentualVar > 0) {
+        elPrecoAntigo.innerHTML = 'De: ' + n2v(vVendaVar);
+        elPrecoAntigo.style.display = 'block';
+      } else {
+        elPrecoAntigo.style.display = 'none';
+      }
+    }
+    
+    const configTagVar = getConfigOferta();
+    if (elBadgeOferta) {
+      // 🚀 REGRA: A tag não some se for a época sazonal da Black Friday, pois é um evento de alto impacto.
+      elBadgeOferta.style.display = (isPromoVar && (!isPixVar || configTagVar.isBlack)) ? 'inline-block' : 'none';
+    }
+
+    if (elBadgeDesconto) {
+      if (percentualVar > 0) {
+        elBadgeDesconto.innerHTML = `-${percentualVar}%`;
+        elBadgeDesconto.style.display = 'inline-block';
+      } else {
+        elBadgeDesconto.style.display = 'none';
+      }
+    }
+    
+    if (elBadgePix) {
+      if (isPixVar) {
+        elBadgePix.style.display = 'inline-block';
+        elBadgePix.className = 'badge bg-success px-2 py-1';
+        elBadgePix.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> NO PIX';
+      } else {
+        elBadgePix.style.display = 'none';
+      }
+    }
+    
+    if (elValorCartaoTxt) {
+      if (isPixVar) {
+        elValorCartaoTxt.innerHTML = n2v(precoCartaoVar) + ' no cartão<br>';
+        elValorCartaoTxt.style.display = 'inline';
+      } else {
+        elValorCartaoTxt.style.display = 'none';
+      }
+    }
+    
+    if (elTextoParcelas) elTextoParcelas.innerHTML = txtParcVar;
   }
 
   btn.style.display = 'block';
@@ -2042,8 +2203,42 @@ function renderizarDetalhesProduto(p) {
   // --- INJEÇÃO: REGRAS DO DOSSIÊ (Promoção, Pix e Estoque) ---
   var estaEmPromo = p.isPromoAtiva !== undefined ? p.isPromoAtiva : vPromo > 0;
   var temPix = p.isPixAtivo !== undefined ? p.isPixAtivo : vPix > 0;
-  var precoFinal = estaEmPromo ? vPromo : vVenda;
+  
+  const configTag = getConfigOferta();
+
+  // 🚀 REGRA DE DESTAQUE: PIX (se ativo) é o destaque. Cartão vira secundário.
+  var precoCartao = estaEmPromo ? vPromo : vVenda;
+  var precoDestaque = temPix ? vPix : precoCartao;
+  
+  // 🚀 REGRA DE PARCELAMENTO (Sempre baseado no preço de cartão)
+  var numParcelas = 1;
+  if (precoCartao >= 350) numParcelas = 3;
+  else if (precoCartao >= 200) numParcelas = 2;
+  
+  var txtParcelas = "";
+  if (numParcelas > 1) {
+    txtParcelas = `em até ${numParcelas}x de ${n2v(precoCartao / numParcelas)} sem juros`;
+  } else {
+    txtParcelas = temPix ? `à vista` : `à vista por ${n2v(precoCartao)}`;
+  }
+  
+  // Cálculo do Percentual de Desconto na Tela do Produto (Menor Preço)
+  var percentualDescontoPDP = 0;
+  if (vVenda > 0 && precoDestaque < vVenda) {
+    percentualDescontoPDP = Math.floor(((vVenda - precoDestaque) / vVenda) * 100);
+  }
+  
   var isEsgotado = p.estoque <= 0;
+
+  // --- BALÕES FLUTUANTES DIRETOS PARA A FOTO DA PDP ---
+  // 🚀 REGRA: A tag sazonal (Black Friday) é um evento maior, portanto deve aparecer sempre que houver promo.
+  var htmlOfertaEsqPDP = estaEmPromo 
+    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+    : '';
+    
+  var htmlDescontoDirPDP = percentualDescontoPDP > 0 
+    ? `<div class="position-absolute bg-dark text-white px-2 py-1 shadow rounded-3 fw-bold text-center" style="z-index: 10; top: 10px !important; right: 10px !important; left: auto !important; font-size: 0.65rem; min-width: 45px; width: fit-content !important; height: fit-content !important;">-${percentualDescontoPDP}%</div>` 
+    : '';
 
   // Processamento de Fotos
   var fotos = (Array.isArray(p.todasFotos) && p.todasFotos.length > 0) ? p.todasFotos : [];
@@ -2076,7 +2271,7 @@ function renderizarDetalhesProduto(p) {
           "@type": "Offer",
           "url": window.location.href,
           "priceCurrency": "BRL",
-          "price": precoFinal,
+          "price": precoDestaque,
           "availability": isEsgotado ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
       }
   };
@@ -2146,7 +2341,7 @@ function renderizarDetalhesProduto(p) {
             // INJEÇÃO SEO IMAGENS: Adicionado 'alt' dinâmico e 'title' nas fotos do carrossel
             return `
               <div class="carousel-item ${activeClass}">
-                <div class="ratio" style="--bs-aspect-ratio: 125%; background-color: #fff;">
+                <div class="ratio position-relative" style="--bs-aspect-ratio: 125%; background-color: #fff;">
                   <img ${obterAtributosImagem(p.id, urlDrive, false, idOtimizadoUnico)} 
                       class="object-fit-cover" 
                       alt="Foto ${i + 1} do produto ${p.nome}"
@@ -2154,6 +2349,8 @@ function renderizarDetalhesProduto(p) {
                       style="width: 100%; height: 100%; cursor: zoom-in;" 
                       onclick="abrirZoomModal('${safeId(p.id)}', ${i})"
                       referrerpolicy="no-referrer">
+                  ${htmlOfertaEsqPDP}
+                  ${htmlDescontoDirPDP}
                 </div>
               </div>`;
           }).join('')}
@@ -2182,15 +2379,19 @@ function renderizarDetalhesProduto(p) {
       <p class="text-muted small mb-3">Ref: ${p.id} | Categoria: ${p.categoria}</p>
       
       ${!isEsgotado ? `
-      <div class="p-3 bg-light rounded border mb-4">
-        ${estaEmPromo ? '<small class="text-decoration-line-through text-muted">De: ' + n2v(vVenda) + '</small>' : ''}
+      <div class="p-3 bg-light rounded border mb-4" id="box-preco-pdp">
+        ${(estaEmPromo || temPix) && vVenda > precoDestaque ? '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted">De: ' + n2v(vVenda) + '</small>' : '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted" style="display:none;"></small>'}
         
-        <div class="d-flex align-items-center gap-2">
-          <h2 class="fw-bold mb-0 text-primary">${n2v(precoFinal)}</h2>
-          ${estaEmPromo ? '<span class="badge bg-danger">OFERTA</span>' : ''}
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h2 id="preco-atual-pdp" class="fw-bold mb-0 text-primary">${n2v(precoDestaque)}</h2>${temPix ? '<span id="badge-pix-pdp" class="badge bg-success px-2 py-1"><i class="bi bi-lightning-charge-fill"></i> NO PIX</span>' : '<span id="badge-pix-pdp" style="display:none;"></span>'}
+          ${(estaEmPromo && !temPix) || (estaEmPromo && configTag.isBlack) ? `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="letter-spacing: 0.5px;">${configTag.texto}</span>` : `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="display:none; letter-spacing: 0.5px;">${configTag.texto}</span>`}
+          ${percentualDescontoPDP > 0 ? `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3">-${percentualDescontoPDP}%</span>` : `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3" style="display:none;"></span>`}
         </div>
         
-        ${temPix ? '<div class="text-success small fw-bold mt-1"><i class="bi bi-qr-code"></i> ou ' + n2v(vPix) + ' via PIX</div>' : ''}
+        <div id="preco-secundario-pdp" class="text-secondary small fw-bold mt-2">
+          ${temPix ? '<span id="valor-cartao-txt">' + n2v(precoCartao) + ' no cartão</span><br>' : '<span id="valor-cartao-txt" style="display:none;"></span>'}
+          <i class="bi bi-credit-card me-1"></i> <span id="texto-parcelas-pdp">${txtParcelas}</span>
+        </div>
       </div>
       ` : ''}
 
@@ -2789,8 +2990,10 @@ function injetarEExibirPromocao() {
         if (originalOnLoad) {
             originalOnLoad(e);
         }
-        // Dispara a nova função promocional 100% injetada via JS
-        injetarEExibirPromocao();
+        // Dispara a nova função promocional 100% injetada via JS apenas se ela não estiver comentada
+        if (typeof injetarEExibirPromocao === 'function') {
+            injetarEExibirPromocao();
+        }
     };
 })();
 
