@@ -122,7 +122,7 @@ function getConfigOferta() {
   
   return {
     isBlack: isBlackSeason,
-    texto: isEsquenta ? "🔥 ESQUENTA BLACK" : (isBlackNov ? "🔥 BLACK NOV" : "<i class=\"bi bi-tag-fill me-1\"></i> OFERTA"),
+    texto: isEsquenta ? "🔥 ESQUENTA BLACK" : (isBlackNov ? "🔥 BLACK NOVEMBER" : "<i class=\"bi bi-tag-fill me-1\"></i> OFERTA"),
     classe: isBlackSeason ? "black-friday-shimmer text-white" : "bg-danger text-white"
   };
 }
@@ -539,8 +539,15 @@ function criarCardProduto(p) {
 
   // --- BALÕES FLUTUANTES DIRETOS ---
   // 🚀 REGRA: "OFERTA" SEMPRE aparece na foto do card se a promoção normal estiver ligada. Dinâmico para Black Friday.
-  var htmlOfertaEsq = estaEmPromo 
-    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+  var classeDisplayFoto = configTag.isBlack ? "d-none d-xl-flex" : "d-flex";  
+  
+  var htmlOfertaEsqImg = estaEmPromo 
+    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold ${classeDisplayFoto} align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+    : '';
+    
+  // Tag exclusiva para o corpo do card em telas menores (Só existe se for Black Friday)
+  var htmlOfertaEsqBody = (estaEmPromo && configTag.isBlack)
+    ? `<div class="${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex d-xl-none align-items-center justify-content-center mb-1 mt-1" style="font-size: 0.6rem; width: fit-content; letter-spacing: 0.5px; line-height: 1;">${configTag.texto}</div>`
     : '';
     
   // 🚀 CORREÇÃO BOOTSTRAP: O left: auto !important impede que a imagem puxe a tag para a esquerda.
@@ -576,11 +583,12 @@ function criarCardProduto(p) {
             title="${p.nome}"
             referrerpolicy="no-referrer">
           
-          ${htmlOfertaEsq}
+          ${htmlOfertaEsqImg}
           ${htmlDescontoDir}
         </div>
 
         <div class="card-body p-2 d-flex flex-column">
+          ${htmlOfertaEsqBody}
           <div class="mb-1">
             <small class="text-uppercase text-primary fw-bold" style="font-size: 0.65rem;">
               ${p.categoria || 'Geral'}
