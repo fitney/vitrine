@@ -122,7 +122,7 @@ function getConfigOferta() {
   
   return {
     isBlack: isBlackSeason,
-    texto: isEsquenta ? "🔥 ESQUENTA BLACK" : (isBlackNov ? "🔥 BLACK NOVEMBER" : "<i class=\"bi bi-tag-fill me-1\"></i> OFERTA"),
+    texto: isEsquenta ? "🔥 ESQUENTA BLACK FITNEY" : (isBlackNov ? "🔥 BLACK NOVEMBER FITNEY" : "<i class=\"bi bi-tag-fill me-1\"></i> OFERTA"),
     classe: isBlackSeason ? "black-friday-shimmer text-white" : "bg-danger text-white"
   };
 }
