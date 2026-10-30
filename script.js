@@ -564,7 +564,7 @@ function criarCardProduto(p) {
 
   // Badge do PIX ao lado do preço
   var htmlBadgePix = temPix 
-    ? `<span class="badge bg-success ms-1 px-1 py-0" style="font-size: 0.6rem;"><i class="bi bi-lightning-charge-fill"></i> PIX</span>` 
+    ? `<span class="badge bg-success ms-2 d-inline-flex align-items-center justify-content-center" style="font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;"><i class="bi bi-lightning-charge-fill me-1"></i> PIX</span>` 
     : '';
 
   // HTML do Preço Secundário (Cartão)
