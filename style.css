@@ -31,11 +31,11 @@
     overflow: visible !important; /* Se estiver 'hidden' ou 'auto', o sticky morre */
   }
 
-  /* Coluna 2: Carrinho Lateral Estrito (129px) - ESTILO AMAZON */
+  /* Coluna 2: Carrinho Lateral Estrito (200px) - ESTILO MODERNO */
   #carrinho-global-lateral {
-    width: 129px !important;
-    min-width: 129px !important;
-    max-width: 129px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
     background-color: #fff;
     border-left: 1px solid #DDD;
     z-index: 1030;
@@ -177,7 +177,7 @@
   /* =================================================================================
      6. ESTILIZAÇÃO DO CARRINHO LATERAL (AMAZON UI)
      ================================================================================= */
-/* Ajuste da Área de Fechamento Desktop (129px) */
+/* Ajuste da Área de Fechamento Desktop (200px) */
 .ewc-header-static {
     display: flex;
     flex-direction: column;
@@ -462,19 +462,19 @@
 }
 
 /* =================================================================================
-   BOTÃO DESKTOP (129px) - AMARELO -> VERDE NO HOVER
+   BOTÃO DESKTOP (200px) - ROSA -> VERDE NO HOVER
    ================================================================================= */
 .btn-modern-wa-desktop {
     background-color: #FF4F95 !important; /* Rosa Elegante */
     color: #FFFFFF !important;            /* Texto Branco */
     border: 1px solid #212529 !important;
     border-radius: 50px !important;
-    width: 115px;
-    padding: 8px 12px !important;
+    width: 180px;
+    padding: 10px 12px !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     text-decoration: none !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease; 
@@ -483,13 +483,13 @@
 
 /* Garante que o ícone acompanhe a cor do texto */
 .btn-modern-wa-desktop i {
-    font-size: 14px !important;
+    font-size: 16px !important;
     color: inherit; 
     flex-shrink: 0;
 }
 
 .btn-modern-wa-desktop span {
-    font-size: 9px !important;
+    font-size: 11px !important;
     font-weight: 800;
     text-transform: uppercase;
     white-space: nowrap;

@@ -29,6 +29,8 @@ let categoriaAtivaTopo = null; // Armazena a categoria selecionada nos filtros s
 
 const CHAVE_CARRINHO = "cache_carrinho_v1"; // Chave de identificação para o armazenamento do carrinho no LocalStorage.
 const CHAVE_CACHE = "cache_vitrine_loja_full_v8"; // Chave de identificação para o cache da vitrine de produtos.
+let cupomAtivo = null; // Armazena o cupom de desconto validado no momento da compra.
+let metodoPagamentoCart = 'CARTAO'; // Define a forma de pagamento selecionada no carrinho ('CARTAO' ou 'PIX').
 const IMG_CONFIG = { // Define as rotas e extensões para o carregamento de imagens locais.
   basePath: 'https://fitney.com.br/img',
   thumbsFolder: 'PRODUTOS_THUMBS',
@@ -542,12 +544,12 @@ function criarCardProduto(p) {
   var classeDisplayFoto = configTag.isBlack ? "d-none d-xl-flex" : "d-flex";  
   
   var htmlOfertaEsqImg = estaEmPromo 
-    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold ${classeDisplayFoto} align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold ${classeDisplayFoto} align-itens-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
     : '';
     
   // Tag exclusiva para o corpo do card em telas menores (Só existe se for Black Friday)
   var htmlOfertaEsqBody = (estaEmPromo && configTag.isBlack)
-    ? `<div class="${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex d-xl-none align-items-center justify-content-center mb-1 mt-1" style="font-size: 0.6rem; width: fit-content; letter-spacing: 0.5px; line-height: 1;">${configTag.texto}</div>`
+    ? `<div class="${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex d-xl-none align-itens-center justify-content-center mb-1 mt-1" style="font-size: 0.6rem; width: fit-content; letter-spacing: 0.5px; line-height: 1;">${configTag.texto}</div>`
     : '';
     
   // 🚀 CORREÇÃO BOOTSTRAP: O left: auto !important impede que a imagem puxe a tag para a esquerda.
@@ -601,7 +603,7 @@ function criarCardProduto(p) {
           ${!isEsgotado ? `
           <div class="price-info mb-2">
             ${htmlPrecoAntigo}
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-itens-center">
               <span class="fw-bold text-primary" style="font-size: 1.1rem;">
                 ${n2v(precoDestaque)}
               </span>
@@ -683,7 +685,7 @@ function renderizarCheckboxes(containerId, lista, tipo) {
   if (secaoPai) secaoPai.style.display = 'block';
 
   container.innerHTML = lista.map((item, index) => `
-    <div class="checkbox-filter d-flex align-items-center mb-1">
+    <div class="checkbox-filter d-flex align-itens-center mb-1">
       <input type="checkbox" id="${tipo}-${index}" value="${item}" class="filter-check me-2" data-type="${tipo}" onchange="aplicarFiltros()">
       <label for="${tipo}-${index}" class="text-truncate small" style="cursor:pointer; flex:1" title="${item}">
         ${item}
@@ -866,7 +868,7 @@ function realizarBuscaTopo(termo) {
      // Monta sugestões de texto (usando o próprio nome do produto)
      var sugestoesHtml = resultados.slice(0, 3).map(p => {
          var nomeDestacado = p.nome.replace(new RegExp(t, 'gi'), match => `<strong class="text-dark">${match}</strong>`);
-         return `<a href="javascript:void(0)" onclick="document.getElementById('search-dropdown-floating').style.display='none'; verProduto('${safeId(p.id)}');" class="text-decoration-none d-flex align-items-center p-3 border-bottom text-muted" style="transition: 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+         return `<a href="javascript:void(0)" onclick="document.getElementById('search-dropdown-floating').style.display='none'; verProduto('${safeId(p.id)}');" class="text-decoration-none d-flex align-itens-center p-3 border-bottom text-muted" style="transition: 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
            <i class="bi bi-search me-3"></i>
            <span class="text-lowercase" style="font-size: 0.95rem;">${nomeDestacado}</span>
          </a>`;
@@ -882,13 +884,13 @@ function realizarBuscaTopo(termo) {
 
          var preco = p.isPromoAtiva ? p.valorPromo : p.valorVenda;
          
-         return `<a href="javascript:void(0)" onclick="document.getElementById('search-dropdown-floating').style.display='none'; verProduto('${safeId(p.id)}');" class="text-decoration-none d-flex align-items-center p-3 border-bottom" style="transition: 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+         return `<a href="javascript:void(0)" onclick="document.getElementById('search-dropdown-floating').style.display='none'; verProduto('${safeId(p.id)}');" class="text-decoration-none d-flex align-itens-center p-3 border-bottom" style="transition: 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
            <div style="min-width: 60px; min-height: 60px; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; background: #fff;" class="shadow-sm border me-3">
              <img ${atributosImg} style="width: 100%; height: 100%; object-fit: cover;">
            </div>
            <div class="flex-grow-1 overflow-hidden">
              <h6 class="text-dark fw-bold mb-1 text-truncate" style="font-size: 0.85rem;">${p.nome}</h6>
-             <div class="d-flex align-items-center gap-2">
+             <div class="d-flex align-itens-center gap-2">
                <span class="fw-bold text-dark" style="font-size: 1rem;">${n2v(preco)}</span>
              </div>
            </div>
@@ -1105,7 +1107,7 @@ function atualizarCoresDisponiveis(idProduto, tamanhoSelecionado) {
     const btn = document.getElementById('btn-whatsapp-' + idProduto);
 
     divEstoque.innerHTML = `
-      <div class="alert alert-secondary py-2 small border-0 bg-secondary-subtle text-secondary-emphasis d-flex align-items-center">
+      <div class="alert alert-secondary py-2 small border-0 bg-secondary-subtle text-secondary-emphasis d-flex align-itens-center">
         <i class="bi bi-exclamation-triangle-fill me-2"></i> 
         <span>Tamanho ${tamanhoSelecionado} esgotado no momento.</span>
       </div>`;
@@ -1165,7 +1167,7 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
   if (disponivelReal <= 0) {
     // 🚀 ALTERAÇÃO: Quando esgotado, troca a mensagem e transforma o botão em "Avise-me"
     divEstoque.innerHTML = `
-      <div class="alert alert-secondary py-2 small border-0 bg-secondary-subtle text-secondary-emphasis d-flex align-items-center">
+      <div class="alert alert-secondary py-2 small border-0 bg-secondary-subtle text-secondary-emphasis d-flex align-itens-center">
         <i class="bi bi-exclamation-triangle-fill me-2"></i> 
         <span>Variação esgotada no momento.</span>
       </div>`;
@@ -1186,7 +1188,7 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
     
   } else {
     divEstoque.innerHTML = `
-      <div class="alert alert-success py-2 small border-0 bg-success-subtle text-success-emphasis d-flex align-items-center">
+      <div class="alert alert-success py-2 small border-0 bg-success-subtle text-success-emphasis d-flex align-itens-center">
         <i class="bi bi-check-circle-fill me-2"></i> 
         <span>Disponível: <strong>${disponivelReal} unidades</strong></span>
       </div>`;
@@ -1353,7 +1355,7 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden w-100">
           <div class="modal-header bg-dark text-white p-4 border-0">
-            <h5 class="modal-title fw-bold mb-0 d-flex align-items-center" style="font-size: 1rem;">
+            <h5 class="modal-title fw-bold mb-0 d-flex align-itens-center" style="font-size: 1rem;">
               <div class="bg-white bg-opacity-25 rounded p-2 me-3 d-inline-flex"><i class="bi bi-bell-fill text-warning"></i></div>
               AVISE-ME QUANDO CHEGAR
             </h5>
@@ -1541,61 +1543,144 @@ function atualizarInterfaceCarrinho() {
 
   // 2. Controle de visibilidade do painel fixo (Desktop)
   if (window.innerWidth > 991) {
-    if (painelLateral) painelLateral.style.display = 'block';
+    if (painelLateral) painelLateral.style.display = 'block'; // Força exibição no desktop
   } else {
-    if (painelLateral) painelLateral.style.display = 'none';
+    if (painelLateral) painelLateral.style.display = 'none';  // Força ocultação no mobile
   }
 
   let totalDinheiro = 0;
+  let baseCalculoCupom = 0;
   let totalItens = 0;
 
-  // 3. Geração do HTML com Validação de Estoque por Item
+  // 3. Geração do HTML com Validação de Estoque e Preço Dinâmico
   const htmlItens = carrinho.map((item, index) => {
-    totalDinheiro += (item.preco * item.qtd);
-    totalItens += item.qtd;
-
-    // --- LÓGICA DE TRAVA DE ESTOQUE ---
-    // Busca o produto e a variação exata no banco de dados oficial
     const produtoOriginal = bancoDeDados.find(p => String(p.id) === String(item.id));
     const variacaoOficial = produtoOriginal?.variacoes?.find(v => v.cor === item.cor && v.tamanho === item.tamanho);
     
+    // --- RECÁLCULO DINÂMICO DE PREÇO (PIX vs CARTÃO vs PROMO) ---
+    const vVenda = variacaoOficial?.valorVendaFinal > 0 ? variacaoOficial.valorVendaFinal : (produtoOriginal?.valorVenda || item.preco);
+    const vPromo = variacaoOficial?.valorPromoFinal > 0 ? variacaoOficial.valorPromoFinal : produtoOriginal?.valorPromo;
+    const vPix = variacaoOficial?.valorPixFinal > 0 ? variacaoOficial.valorPixFinal : produtoOriginal?.valorPix;
+    
+    const isPromoAtiva = produtoOriginal?.isPromoAtiva !== undefined ? produtoOriginal.isPromoAtiva : (vPromo > 0);
+    const isPixAtivo = produtoOriginal?.isPixAtivo !== undefined ? produtoOriginal.isPixAtivo : (vPix > 0);
+
+    let precoCartao = (isPromoAtiva && vPromo > 0) ? vPromo : vVenda;
+    let precoAtivo = (metodoPagamentoCart === 'PIX' && isPixAtivo && vPix > 0) ? vPix : precoCartao;
+
+    totalDinheiro += (precoAtivo * item.qtd);
+    totalItens += item.qtd;
+
+    // --- LÓGICA DE BASE DO CUPOM ---
+    const isItemComDescontoProprio = (precoAtivo < vVenda);
+    if (cupomAtivo) {
+        baseCalculoCupom += (precoAtivo * item.qtd);
+    }
+
+    // --- LÓGICA DE TRAVA DE ESTOQUE ---
     const estoqueDisponivel = variacaoOficial ? Number(variacaoOficial.quantidade) : 0;
     const atingiuLimite = item.qtd >= estoqueDisponivel;
-    // ---------------------------------
-
-    const iconeMenos = item.qtd === 1 ? 'bi-trash' : 'bi-dash';
+    const iconeMenos = item.qtd === 1 ? 'bi-trash text-danger' : 'bi-dash';
 
     return `
-      <div class="ewc-item" style="position: relative; padding-bottom: ${atingiuLimite ? '15px' : '0'};">
-        <img src="${item.foto}" alt="${item.nome}">
-        <div class="ewc-item-name" style="color: #000 !important; font-weight: bold !important;">${item.nome}</div>
-        <div class="ewc-item-price" style="color: #B12704 !important; font-weight: bold !important;">${n2v(item.preco * item.qtd)}</div>
-        <div class="ewc-item-meta" style="color: #000 !important; font-weight: bold !important;">${item.cor} | ${item.tamanho}</div>
-        
-        <div class="a-stepper-container">
-            <button class="a-stepper-btn" onclick="alterarQtd(${index}, -1)">
-                <i class="bi ${iconeMenos}"></i>
-            </button>
-            <div class="a-stepper-value">${item.qtd}</div>
-            
-            <button class="a-stepper-btn" 
-                    onclick="alterarQtd(${index}, 1)"
-                    ${atingiuLimite ? 'disabled style="opacity: 0.2; cursor: not-allowed;"' : ''}>
-                <i class="bi bi-plus"></i>
-            </button>
+      <div class="mb-3 pb-3 border-bottom text-center">
+        <!-- Fotografia Centralizada -->
+        <div class="mx-auto mb-2" style="width: 75px; height: 95px; border-radius: 6px; overflow: hidden; border: 1px solid #eaeaea;">
+          <img src="${item.foto}" alt="${item.nome}" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         
-        ${atingiuLimite ? `<div class="text-danger fw-bold" style="font-size: 8px; text-align: center; width: 100%; margin-top: 2px;">LIMITE EM ESTOQUE</div>` : ''}
+        <!-- Detalhes Empilhados -->
+        <div class="w-100 px-1">
+          <h6 class="mb-1 text-dark fw-bold" style="font-size: 0.75rem; line-height: 1.2;">${item.nome}</h6>
+          <div class="text-muted mb-1" style="font-size: 0.65rem;">${item.cor} | Tam: ${item.tamanho}</div>
+          ${isItemComDescontoProprio ? `<div class="text-decoration-line-through text-muted" style="font-size: 0.65rem;">De: ${n2v(vVenda * item.qtd)}</div>` : ''}
+          <div class="fw-bold mb-2" style="color: #FF4F95; font-size: 0.9rem;">${n2v(precoAtivo * item.qtd)}</div>
+          
+          <!-- Botões de Quantidade Centralizados -->
+          <div class="d-flex justify-content-center">
+            <div class="d-flex align-itens-center bg-light rounded-pill border" style="padding: 2px 6px;">
+              <button class="btn btn-sm btn-link text-dark p-0 text-decoration-none" onclick="alterarQtd(${index}, -1)" style="width: 24px; height: 24px;">
+                  <i class="bi ${iconeMenos}"></i>
+              </button>
+              <span class="mx-2 fw-bold text-dark text-center" style="font-size: 0.8rem; min-width: 20px;">${item.qtd}</span>
+              <button class="btn btn-sm btn-link text-dark p-0 text-decoration-none" onclick="alterarQtd(${index}, 1)" ${atingiuLimite ? 'disabled style="opacity: 0.3;"' : ''} style="width: 24px; height: 24px;">
+                  <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+          </div>
+          
+          ${atingiuLimite ? `<div class="text-danger fw-bold mt-2" style="font-size: 0.6rem;"><i class="bi bi-exclamation-circle-fill"></i> LIMITE ATINGIDO</div>` : ''}
+        </div>
       </div>`;
   }).join('');
 
   if (containerFixo) containerFixo.innerHTML = htmlItens;
   if (containerMobile) containerMobile.innerHTML = htmlItens;
 
+  // --- LÓGICA DE CÁLCULO DO CUPOM ---
+  let descontoTotal = 0;
+  let subtotalItens = totalDinheiro;
+
+  if (cupomAtivo) {
+      if (cupomAtivo.tipo === '%') {
+          descontoTotal = baseCalculoCupom * (cupomAtivo.valor / 100);
+      } else {
+          descontoTotal = Math.min(cupomAtivo.valor, baseCalculoCupom);
+      }
+      if (descontoTotal > totalDinheiro) descontoTotal = totalDinheiro;
+  }
+
+  let totalFinal = totalDinheiro - descontoTotal;
+
+  // HTML DOS COMPONENTES (CRIADOR DINÂMICO PARA ISOLAR IDs MOBILE E DESKTOP)
+  const gerarHtmlCupom = (origem) => `
+    <div class="px-2 py-3 mt-2 border-top">
+      <!-- SELETOR DE PAGAMENTO -->
+      <label class="fw-bold text-dark mb-2" style="font-size: 0.8rem;"><i class="bi bi-wallet2"></i> Forma de Pagamento</label>
+      <div class="d-flex flex-column gap-2 mb-3">
+         <button class="btn btn-sm fw-bold shadow-sm ${metodoPagamentoCart === 'PIX' ? 'btn-success' : 'btn-outline-secondary bg-white'}" onclick="setMetodoPagamento('PIX')">
+            <i class="bi bi-lightning-charge-fill"></i> PIX
+         </button>
+         <button class="btn btn-sm fw-bold shadow-sm ${metodoPagamentoCart === 'CARTAO' ? 'btn-dark' : 'btn-outline-secondary bg-white'}" onclick="setMetodoPagamento('CARTAO')">
+            <i class="bi bi-credit-card-fill"></i> CARTÃO
+         </button>
+      </div>
+
+      <!-- CUPOM DE DESCONTO -->
+      ${cupomAtivo ? `
+        <div class="p-2 rounded bg-success-subtle border border-success-subtle mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+             <span class="fw-bold text-success" style="font-size: 0.8rem;"><i class="bi bi-tag-fill me-1"></i> ${cupomAtivo.codigo}</span>
+             <button class="btn btn-link text-danger p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="removerCupom()">Remover</button>
+          </div>
+          ${cupomAtivo.primeiraVenda ? `<div class="text-dark opacity-75 mt-1" style="font-size: 0.65rem;"><i class="bi bi-info-circle-fill"></i> Exclusivo 1ª compra.</div>` : ''}
+        </div>
+        <div class="d-flex justify-content-between text-muted mb-1" style="font-size: 0.8rem;">
+           <span>Subtotal:</span>
+           <span>${n2v(subtotalItens)}</span>
+        </div>
+        <div class="d-flex justify-content-between text-success fw-bold" style="font-size: 0.85rem;">
+           <span>Desconto (${cupomAtivo.tipo === '%' ? cupomAtivo.valor+'%' : 'Fixo'}):</span>
+           <span>- ${n2v(descontoTotal)}</span>
+        </div>
+      ` : `
+        <label class="fw-bold text-dark mb-2" style="font-size: 0.85rem;"><i class="bi bi-ticket-perforated"></i> Cupom de Desconto</label>
+        <div class="d-flex flex-column gap-2">
+          <input type="text" id="input-cupom-${origem}" class="form-control form-control-sm text-uppercase border-secondary-subtle shadow-sm text-center" placeholder="CÓDIGO DO CUPOM" onkeydown="if(event.key === 'Enter') aplicarCupom('${origem}')">
+          <button class="btn btn-dark btn-sm fw-bold w-100 shadow-sm" type="button" id="btn-aplicar-cupom-${origem}" onclick="aplicarCupom('${origem}')">APLICAR CUPOM</button>
+        </div>
+        <div id="msg-cupom-${origem}" class="text-danger mt-2 fw-bold text-center" style="font-size: 0.7rem; display:none;"></div>
+      `}
+    </div>
+  `;
+
+  // Substitui todo o conteúdo de uma vez, em vez de acumular falhas no DOM
+  if (containerFixo) containerFixo.innerHTML = htmlItens + gerarHtmlCupom('fixo');
+  if (containerMobile) containerMobile.innerHTML = htmlItens + gerarHtmlCupom('mobile');
+
   // 4. Atualização dos Totais
-  const valorFormatado = n2v(totalDinheiro);
-  if (document.getElementById('total-carrinho-fixo')) document.getElementById('total-carrinho-fixo').innerText = valorFormatado;
-  if (document.getElementById('total-carrinho-mobile')) document.getElementById('total-carrinho-mobile').innerText = valorFormatado;
+  if (document.getElementById('total-carrinho-fixo')) document.getElementById('total-carrinho-fixo').innerText = n2v(totalFinal);
+  if (document.getElementById('total-carrinho-mobile')) document.getElementById('total-carrinho-mobile').innerText = n2v(totalFinal);
 
   // 5. Atualização do Badge
   if (badge) {
@@ -1625,36 +1710,66 @@ function enviarPedidoWhatsApp() {
     }
 
     let mensagem = "*NOVO PEDIDO - VITRINE VIRTUAL*\n";
+    mensagem += "------------------------------------------\n";
+    mensagem += `*FORMA DE PAGAMENTO:* ${metodoPagamentoCart === 'PIX' ? 'PIX' : 'Cartão'}\n`;
     mensagem += "------------------------------------------\n\n";
     
     let totalGeral = 0;
+    let baseCalculoCupom = 0;
 
     carrinho.forEach((item, i) => {
-        // CORREÇÃO: Calcula o subtotal (Preço x Quantidade)
-        const subtotalItem = item.preco * item.qtd;
+        const produtoOriginal = bancoDeDados.find(p => String(p.id) === String(item.id));
+        const variacaoOficial = produtoOriginal?.variacoes?.find(v => v.cor === item.cor && v.tamanho === item.tamanho);
+        
+        const vVenda = variacaoOficial?.valorVendaFinal > 0 ? variacaoOficial.valorVendaFinal : (produtoOriginal?.valorVenda || item.preco);
+        const vPromo = variacaoOficial?.valorPromoFinal > 0 ? variacaoOficial.valorPromoFinal : produtoOriginal?.valorPromo;
+        const vPix = variacaoOficial?.valorPixFinal > 0 ? variacaoOficial.valorPixFinal : produtoOriginal?.valorPix;
+        
+        const isPromoAtiva = produtoOriginal?.isPromoAtiva !== undefined ? produtoOriginal.isPromoAtiva : (vPromo > 0);
+        const isPixAtivo = produtoOriginal?.isPixAtivo !== undefined ? produtoOriginal.isPixAtivo : (vPix > 0);
+
+        let precoCartao = (isPromoAtiva && vPromo > 0) ? vPromo : vVenda;
+        let precoAtivo = (metodoPagamentoCart === 'PIX' && isPixAtivo && vPix > 0) ? vPix : precoCartao;
+
+        const subtotalItem = precoAtivo * item.qtd;
         totalGeral += subtotalItem;
 
+        if (cupomAtivo) {
+            baseCalculoCupom += subtotalItem;
+        }
+
         // ATUALIZAÇÃO DNS: Montagem do SKU de Estoque composto {SKU}{TAM2}{COR3}
-        // O item.id já é o SKU base, item.idTam tem 2 dígitos e item.idCor tem 3 dígitos.
         const skuEstoque = String(item.id) + String(item.idTam) + String(item.idCor);
 
         mensagem += `*${i + 1}. ${item.nome}*\n`;
-        // Inserção do SKU Composto para facilitar a separação no estoque físico
         mensagem += `🔹 SKU: ${skuEstoque}\n`; 
         mensagem += `🔹 Cor: ${item.cor} | Tam: ${item.tamanho}\n`;
         
-        // Se houver mais de 1 unidade, mostra a quantidade e o subtotal
         if (item.qtd > 1) {
-            mensagem += `🔢 Qtd: ${item.qtd} x ${n2v(item.preco)}\n`;
+            mensagem += `🔢 Qtd: ${item.qtd} x ${n2v(precoAtivo)}\n`;
             mensagem += `💰 Subtotal: ${n2v(subtotalItem)}\n\n`;
         } else {
-            mensagem += `💰 Preço: ${n2v(item.preco)}\n\n`;
+            mensagem += `💰 Preço: ${n2v(precoAtivo)}\n\n`;
         }
     });
 
     mensagem += "------------------------------------------\n";
-    mensagem += `*TOTAL ESTIMADO: ${n2v(totalGeral)}*\n\n`;
-    mensagem += "Gostaria de confirmar a disponibilidade destes items.";
+    
+    // --- INTEGRAÇÃO CUPOM NO RESUMO DO PEDIDO ---
+    let descontoTotal = 0;
+    if (cupomAtivo) {
+        descontoTotal = cupomAtivo.tipo === '%' ? baseCalculoCupom * (cupomAtivo.valor / 100) : Math.min(cupomAtivo.valor, baseCalculoCupom);
+        if (descontoTotal > totalGeral) descontoTotal = totalGeral;
+        
+        mensagem += `Subtotal: ${n2v(totalGeral)}\n`;
+        mensagem += `🎟️ Cupom aplicado: *${cupomAtivo.codigo}*\n`;
+        if (cupomAtivo.primeiraVenda) mensagem += `⚠️ (Aviso: Uso exclusivo p/ 1ª compra)\n`;
+        mensagem += `Desconto: - ${n2v(descontoTotal)}\n`;
+    }
+
+    const totalFinalPedido = totalGeral - descontoTotal;
+    mensagem += `*TOTAL ESTIMADO: ${n2v(totalFinalPedido)}*\n\n`;
+    mensagem += "Gostaria de confirmar a disponibilidade destes itens.";
 
     // CORREÇÃO: Usa o telefone da planilha (window.SEU_TELEFONE_LOJA) 
     // ou o fixo caso a planilha ainda esteja carregando
@@ -1667,6 +1782,12 @@ function enviarPedidoWhatsApp() {
     // LIMPEZA PÓS-PEDIDO
     carrinho = []; 
     salvarCarrinhoNoCache(); 
+    atualizarInterfaceCarrinho();
+}
+
+// Alterna a forma de pagamento do carrinho (Pix/Cartão) e recalcula valores e cupons
+function setMetodoPagamento(metodo) {
+    metodoPagamentoCart = metodo;
     atualizarInterfaceCarrinho();
 }
 
@@ -1762,7 +1883,7 @@ function abrirZoomModal(idProduto, indiceInicial) {
 
                   return `
                     <div class="carousel-item ${activeClass} h-100">
-                      <div class="img-zoom-container w-100 h-100 d-flex align-items-center justify-content-center" style="padding-bottom: 80px;">
+                      <div class="img-zoom-container w-100 h-100 d-flex align-itens-center justify-content-center" style="padding-bottom: 80px;">
                         <img ${obterAtributosImagem(p.id, urlDrive, true, idOtimizadoEspecifico)} 
                             class="d-block" 
                             id="img-zoom-${i}"
@@ -2027,7 +2148,7 @@ init: function() {
         if (whatsappEl) {
           whatsappEl.innerHTML = `
             <a href="https://wa.me/${window.SEU_TELEFONE_LOJA}" target="_blank" 
-              class="text-decoration-none d-flex align-items-center gap-2 justify-content-center justify-content-md-end" 
+              class="text-decoration-none d-flex align-itens-center gap-2 justify-content-center justify-content-md-end" 
               style="color: #000;">
               <i class="bi bi-whatsapp"></i> <span>${foneFormatado}</span>
             </a>`;
@@ -2241,7 +2362,7 @@ function renderizarDetalhesProduto(p) {
   // --- BALÕES FLUTUANTES DIRETOS PARA A FOTO DA PDP ---
   // 🚀 REGRA: A tag sazonal (Black Friday) é um evento maior, portanto deve aparecer sempre que houver promo.
   var htmlOfertaEsqPDP = estaEmPromo 
-    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex align-items-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
+    ? `<div class="position-absolute ${configTag.classe} px-2 py-1 shadow rounded-pill fw-bold d-flex align-itens-center justify-content-center" style="z-index: 10; top: 10px !important; left: 10px !important; font-size: 0.65rem; width: fit-content !important; height: fit-content !important; letter-spacing: 0.5px;">${configTag.texto}</div>` 
     : '';
     
   var htmlDescontoDirPDP = percentualDescontoPDP > 0 
@@ -2390,7 +2511,7 @@ function renderizarDetalhesProduto(p) {
       <div class="p-3 bg-light rounded border mb-4" id="box-preco-pdp">
         ${(estaEmPromo || temPix) && vVenda > precoDestaque ? '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted">De: ' + n2v(vVenda) + '</small>' : '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted" style="display:none;"></small>'}
         
-        <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="d-flex align-itens-center gap-2 flex-wrap">
           <h2 id="preco-atual-pdp" class="fw-bold mb-0 text-primary">${n2v(precoDestaque)}</h2>${temPix ? '<span id="badge-pix-pdp" class="badge bg-success px-2 py-1"><i class="bi bi-lightning-charge-fill"></i> NO PIX</span>' : '<span id="badge-pix-pdp" style="display:none;"></span>'}
           ${(estaEmPromo && !temPix) || (estaEmPromo && configTag.isBlack) ? `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="letter-spacing: 0.5px;">${configTag.texto}</span>` : `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="display:none; letter-spacing: 0.5px;">${configTag.texto}</span>`}
           ${percentualDescontoPDP > 0 ? `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3">-${percentualDescontoPDP}%</span>` : `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3" style="display:none;"></span>`}
@@ -2535,6 +2656,53 @@ function enviarAvisoLead() {
         btn.innerHTML = txtOriginal;
     });
 }
+
+// =================================================================
+// 6.1 SISTEMA DE CUPONS DE DESCONTO (VITRINE)
+// =================================================================
+
+function aplicarCupom(origem) {
+    // Agora o sistema sabe se você clicou no carrinho Fixo (Desktop) ou Mobile
+    const input = document.getElementById('input-cupom-' + origem);
+    const btn = document.getElementById('btn-aplicar-cupom-' + origem);
+    const msg = document.getElementById('msg-cupom-' + origem);
+    const codigoBruto = input ? input.value.trim().toUpperCase() : '';
+    const codigo = codigoBruto.replace(/[^A-Z0-9\-\+\_]/g, '');
+
+    if (!codigo) {
+        if (msg) { msg.innerText = "Digite um código de cupom."; msg.style.display = 'block'; }
+        return;
+    }
+
+    // Trava de loading UX
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
+    if (msg) msg.style.display = 'none';
+
+    // Integração Backend
+    fetch(API_URL + "?action=validarCupom&codigo=" + encodeURIComponent(codigo))
+        .then(res => res.json())
+        .then(retorno => {
+            if (retorno.erro) {
+                throw new Error(retorno.erro);
+            }
+            // Cupom válido atribuído ao cache global
+            cupomAtivo = retorno;
+            atualizarInterfaceCarrinho();
+        })
+        .catch(err => {
+            if (msg) {
+                msg.innerText = err.message || "Erro ao validar cupom.";
+                msg.style.display = 'block';
+            }
+            if (btn) { btn.disabled = false; btn.innerText = 'APLICAR'; }
+        });
+}
+
+function removerCupom() {
+    cupomAtivo = null;
+    atualizarInterfaceCarrinho();
+}
+
 // Exibe um aviso flutuante elegante na Vitrine (Substitui os alerts nativos)
 function mostrarAvisoFlutuante(mensagem, cor = 'success') {
   let container = document.getElementById('toast-container-global');
@@ -2546,7 +2714,7 @@ function mostrarAvisoFlutuante(mensagem, cor = 'success') {
     document.body.appendChild(container);
   }
   const toast = document.createElement('div');
-  toast.className = `alert alert-${cor} shadow-lg d-flex align-items-center alert-dismissible fade show`;
+  toast.className = `alert alert-${cor} shadow-lg d-flex align-itens-center alert-dismissible fade show`;
   toast.style.minWidth = '300px';
   toast.innerHTML = `
     <strong class="me-auto">${mensagem}</strong>
@@ -2685,7 +2853,7 @@ function injetarEExibirPromocao() {
                 padding: 44px 30px 60px 52px;
             }
 
-            .tag-promo { display:flex; align-items:center; gap:10px; margin-bottom:18px; opacity:0; animation:slideIn 0.5s ease forwards 0.15s; }
+            .tag-promo { display:flex; align-itens:center; gap:10px; margin-bottom:18px; opacity:0; animation:slideIn 0.5s ease forwards 0.15s; }
             .tag-bar { width:28px; height:3px; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); }
             .tag-text { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:6px; text-transform:uppercase; color:var(--pink); }
 
@@ -2703,7 +2871,7 @@ function injetarEExibirPromocao() {
                 opacity: 0;
                 animation: slideIn 0.5s ease forwards 0.4s;
             }
-            .divider-promo { display:flex; align-items:center; gap:10px; margin-bottom:24px; opacity:0; animation:slideIn 0.5s ease forwards 0.5s; }
+            .divider-promo { display:flex; align-itens:center; gap:10px; margin-bottom:24px; opacity:0; animation:slideIn 0.5s ease forwards 0.5s; }
             .div-line { width:36px; height:1px; background:var(--pink); opacity:0.5; }
             .div-dot  { width:5px; height:5px; border-radius:50%; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); }
 
@@ -2717,7 +2885,7 @@ function injetarEExibirPromocao() {
                 margin-bottom: 20px;
                 justify-content: center;
             }
-            .promo-big { display:flex; align-items:flex-end; line-height:1; }
+            .promo-big { display:flex; align-itens:flex-end; line-height:1; }
             .promo-ate {
                 font-family: 'Barlow Condensed', sans-serif;
                 font-size: 18px;
@@ -2738,7 +2906,7 @@ function injetarEExibirPromocao() {
                 text-transform: uppercase;
                 margin-top: 2px;
             }
-            .validity { display:flex; align-items:center; gap:12px; opacity:0; animation:slideIn 0.5s ease forwards 0.78s; flex-wrap: wrap;}
+            .validity { display:flex; align-itens:center; gap:12px; opacity:0; animation:slideIn 0.5s ease forwards 0.78s; flex-wrap: wrap;}
             .validity-pill { background:rgba(255,31,120,0.15); border:1px solid rgba(255,31,120,0.35); border-radius:2px; padding:5px 12px; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--pink-mid); }
             .validity-dates {
                 font-family: 'Barlow', sans-serif;
@@ -2773,7 +2941,7 @@ function injetarEExibirPromocao() {
             .bottom-bar-promo {
               position:absolute; bottom:0; left:0; right:0; height:44px;
               background:rgba(255,31,120,0.07); border-top:1px solid rgba(255,31,120,0.18);
-              z-index:10; display:flex; align-items:center; padding:0 20px 0 52px; gap:14px;
+              z-index:10; display:flex; align-itens:center; padding:0 20px 0 52px; gap:14px;
               opacity:0; animation:fadeIn 0.6s ease forwards 1s;
             }
             .bb-dot { width:5px; height:5px; border-radius:50%; background:var(--pink); box-shadow:0 0 8px var(--pink-glow); animation:blink 1.5s ease-in-out infinite; }
@@ -2799,7 +2967,7 @@ function injetarEExibirPromocao() {
               width:88px; height:88px; border-radius:50%;
               border:2px solid rgba(255,31,120,0.5);
               background:rgba(0,0,0,0.65);
-              display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+              display:flex; flex-direction:column; align-itens:center; justify-content:center; gap:3px;
               opacity:0; animation:fadeIn 0.8s ease forwards 1.1s;
               box-shadow:0 0 22px rgba(255,31,120,0.3),inset 0 0 20px rgba(255,31,120,0.05);
             }
@@ -2817,7 +2985,7 @@ function injetarEExibirPromocao() {
               .left-promo {
                 width: 100%;
                 padding: 30px 20px 60px 20px;
-                align-items: center;
+                align-itens: center;
                 text-align: center;
               }
               .banner-promo-custom .diagonal-block {
@@ -2841,7 +3009,7 @@ function injetarEExibirPromocao() {
               .promo-section { margin-bottom: 141px; }
               
               // Ajuste do agrupamento promo-big //
-              .promo-big { justify-content: center; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+              .promo-big { justify-content: center; flex-wrap: wrap; align-itens: baseline; gap: 4px; }
               .promo-num { font-size: 80px; }
               .promo-pct { font-size: 40px; }
               
