@@ -1280,7 +1280,9 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
     if (elBadgeDesconto) {
       if (percentualVar > 0) {
         elBadgeDesconto.innerHTML = `-${percentualVar}%`;
-        elBadgeDesconto.style.display = 'inline-block';
+        elBadgeDesconto.style.display = 'inline-flex';
+        elBadgeDesconto.className = 'badge bg-dark ms-2 align-items-center justify-content-center';
+        elBadgeDesconto.style.cssText = 'font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;';
       } else {
         elBadgeDesconto.style.display = 'none';
       }
@@ -1288,9 +1290,10 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
     
     if (elBadgePix) {
       if (isPixVar) {
-        elBadgePix.style.display = 'inline-block';
-        elBadgePix.className = 'badge bg-success px-2 py-1';
-        elBadgePix.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> NO PIX';
+        elBadgePix.style.display = 'inline-flex';
+        elBadgePix.className = 'badge bg-success ms-2 align-items-center justify-content-center';
+        elBadgePix.style.cssText = 'font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;';
+        elBadgePix.innerHTML = '<i class="bi bi-lightning-charge-fill me-1"></i> NO PIX';
       } else {
         elBadgePix.style.display = 'none';
       }
@@ -2511,10 +2514,11 @@ function renderizarDetalhesProduto(p) {
       <div class="p-3 bg-light rounded border mb-4" id="box-preco-pdp">
         ${(estaEmPromo || temPix) && vVenda > precoDestaque ? '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted">De: ' + n2v(vVenda) + '</small>' : '<small id="preco-antigo-pdp" class="text-decoration-line-through text-muted" style="display:none;"></small>'}
         
-        <div class="d-flex align-itens-center gap-2 flex-wrap">
-          <h2 id="preco-atual-pdp" class="fw-bold mb-0 text-primary">${n2v(precoDestaque)}</h2>${temPix ? '<span id="badge-pix-pdp" class="badge bg-success px-2 py-1"><i class="bi bi-lightning-charge-fill"></i> NO PIX</span>' : '<span id="badge-pix-pdp" style="display:none;"></span>'}
-          ${(estaEmPromo && !temPix) || (estaEmPromo && configTag.isBlack) ? `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="letter-spacing: 0.5px;">${configTag.texto}</span>` : `<span id="badge-oferta-pdp" class="badge ${configTag.classe} px-2 py-1" style="display:none; letter-spacing: 0.5px;">${configTag.texto}</span>`}
-          ${percentualDescontoPDP > 0 ? `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3">-${percentualDescontoPDP}%</span>` : `<span id="badge-desconto-pdp" class="badge bg-dark px-3 py-1 rounded-3" style="display:none;"></span>`}
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h2 id="preco-atual-pdp" class="fw-bold mb-0 text-primary">${n2v(precoDestaque)}</h2>
+          ${temPix ? '<span id="badge-pix-pdp" class="badge bg-success ms-2 d-inline-flex align-items-center justify-content-center" style="font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;"><i class="bi bi-lightning-charge-fill me-1"></i> NO PIX</span>' : '<span id="badge-pix-pdp" style="display:none;"></span>'}
+          ${(estaEmPromo && !temPix) || (estaEmPromo && configTag.isBlack) ? `<span id="badge-oferta-pdp" class="badge ${configTag.classe} ms-2 d-inline-flex align-items-center justify-content-center" style="font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;">${configTag.texto}</span>` : `<span id="badge-oferta-pdp" class="badge ${configTag.classe}" style="display:none; letter-spacing: 0.5px;">${configTag.texto}</span>`}
+          ${percentualDescontoPDP > 0 ? `<span id="badge-desconto-pdp" class="badge bg-dark ms-2 d-inline-flex align-items-center justify-content-center" style="font-size: 0.65rem; padding: 2px 6px; height: 18px; line-height: 1; align-self: center; letter-spacing: 0.5px;">-${percentualDescontoPDP}%</span>` : `<span id="badge-desconto-pdp" class="badge bg-dark" style="display:none;"></span>`}
         </div>
         
         <div id="preco-secundario-pdp" class="text-secondary small fw-bold mt-2">
