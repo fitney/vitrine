@@ -1314,7 +1314,7 @@ function selecionarVariacaoFinal(idProduto, cor, tam, qtdTotalEstoque, idCor, id
   btn.style.display = 'block';
 }
 /**=================================================================================*/
-// Cria e abre o Modal de Aviso de Estoque extraindo TODOS os tamanhos disponíveis na loja
+// Cria e abre o Modal de Aviso de Estoque extraindo TODOS os tamanhos disponíveis na loja (Conforme LGPD Art. 7º, I e Art. 8º)
 function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
     // 1. TRAVA ABSOLUTA ANTI-CLIQUE DUPLO
     if (window.bloqueioModalAviso) return;
@@ -1366,7 +1366,7 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
           </div>
           
           <div class="modal-body p-4 bg-light">
-            <p class="text-muted small mb-4">Deixe seus dados abaixo e avisaremos via WhatsApp assim que o produto <strong class="text-dark">${p.nome}</strong> for reposto.</p>
+            <p class="text-muted small mb-3">Deixe seus dados abaixo e avisaremos via WhatsApp assim que o produto <strong class="text-dark">${p.nome}</strong> for reposto.</p>
             
             <input type="hidden" id="aviso-sku" value="${p.sku || p.id}">
             <input type="hidden" id="aviso-nome-prod" value="${p.nome}">
@@ -1376,7 +1376,7 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
                 <option value="">Selecione...</option>
                 ${opcoesTamanho}
               </select>
-              <label class="text-muted fw-bold small text-uppercase">Tamanho Desejado <span class="text-danger fs-6">*</span></label>
+            <label class="text-muted fw-bold small text-uppercase">Tamanho Desejado <span class="text-danger fs-6">*</span></label>
             </div>
 
             <div class="form-floating mb-3 shadow-sm">
@@ -1384,11 +1384,22 @@ function abrirModalAviso(idProduto, tamanhoPreSelecionado = null) {
               <label class="text-muted fw-bold small text-uppercase">Seu Nome <span class="text-danger fs-6">*</span></label>
             </div>
 
-            <div class="form-floating mb-2 shadow-sm">
+            <div class="form-floating mb-3 shadow-sm">
               <input type="tel" class="form-control border-0 fw-bold text-dark" id="aviso-whatsapp" placeholder="WhatsApp" 
                      oninput="this.value = this.value.replace(/\\D/g, '').replace(/^(\\d{2})(\\d)/g, '($1) $2').replace(/(\\d)(\\d{4})$/, '$1-$2').substring(0, 15);">
               <label class="text-muted fw-bold small text-uppercase">WhatsApp (DDD + Número) <span class="text-danger fs-6">*</span></label>
             </div>
+
+            <div class="bg-white p-3 rounded-3 border mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="aviso-consentimento">
+                <label class="form-check-label text-muted small" for="aviso-consentimento" style="font-size: 0.75rem; line-height: 1.3;">
+                  Concordo com o tratamento do meu nome e número de telefone exclusivamente para o recebimento de notificações sobre a reposição deste produto, nos termos dos <a href="javascript:void(0)" onclick="abrirModalTermosEPrivacidade()" class="text-primary text-decoration-underline">Termos de Uso e Privacidade</a>.
+                </label>
+            </div>
+            <div id="erro-consentimento" class="text-danger fw-bold mt-1 small d-none">É necessário manifestar consentimento para prosseguir.</div>
+          </div>
+            <small class="text-muted d-block text-center" style="font-size: 0.7rem;">Finalidade estrita: notificação de reposição. Descarte após 90 dias.</small>
 
           </div>
           <div class="modal-footer bg-white border-top p-3 d-flex justify-content-between rounded-bottom-4">
@@ -2574,12 +2585,14 @@ function renderizarChipsCategorias() {
 // ENVIO DOS DADOS DO MODAL DE AVISO (LEADS)
 // =================================================================================
 
-// Coleta os dados do Modal e envia para o Back-end (Planilha)
+// Coleta os dados do Modal e envia para o Back-end com rastreabilidade de consentimento LGPD
 function enviarAvisoLead() {
     // Captura os elementos HTML inteiros (para podermos mudar a borda deles)
     const inputTamanho = document.getElementById('aviso-tamanho');
     const inputNome = document.getElementById('aviso-nome');
     const inputWhatsapp = document.getElementById('aviso-whatsapp');
+    const checkConsentimento = document.getElementById('aviso-consentimento');
+    const msgConsentimento = document.getElementById('erro-consentimento');
 
     const sku = document.getElementById('aviso-sku').value;
     const nomeProd = document.getElementById('aviso-nome-prod').value;
@@ -2588,12 +2601,14 @@ function enviarAvisoLead() {
     const tamanho = inputTamanho.value;
     const nome = inputNome.value.trim();
     const whatsapp = inputWhatsapp.value.trim();
+    const consentimento = checkConsentimento ? checkConsentimento.checked : false;
 
     // 1. Limpa os erros visuais de tentativas anteriores (Restaura o visual padrão)
     [inputTamanho, inputNome, inputWhatsapp].forEach(el => {
         el.classList.remove('is-invalid', 'border', 'border-danger');
         el.classList.add('border-0');
     });
+    if (msgConsentimento) msgConsentimento.classList.add('d-none');
 
     let temErro = false;
 
@@ -2617,6 +2632,12 @@ function enviarAvisoLead() {
         temErro = true;
     }
 
+    // Validação obrigatória de consentimento (Art. 8º da LGPD)
+    if (!consentimento) {
+        if (msgConsentimento) msgConsentimento.classList.remove('d-none');
+        temErro = true;
+    }
+
     // 3. Se houver erro, aborta o envio e mostra a notificação
     if (temErro) {
         return mostrarAvisoFlutuante("⚠️ Preencha corretamente os campos destacados em vermelho.", "warning");
@@ -2628,13 +2649,16 @@ function enviarAvisoLead() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ENVIANDO...';
 
-    // Monta o pacote de dados
+    // Monta o pacote de dados em conformidade com o Art. 6º, III e Art. 37
     const payload = {
         sku: sku,
         nome: nomeProd,
         tamanho: tamanho,
         nomeCliente: nome,
-        whatsapp: whatsapp
+        whatsapp: whatsapp,
+        lgpdConsentimento: true,
+        lgpdVersaoTermo: "v1.0_2026",
+        lgpdTimestamp: new Date().toISOString()
     };
 
     // Comunica com o Servidor (Google Apps Script via POST do fetch)
@@ -3158,7 +3182,6 @@ function injetarEExibirPromocao() {
         }, 1000); 
     }
 }
-->
 */
 // INJEÇÃO: Associa o gatilho ao evento window.onload sem apagar as funções originais
 (function() {
@@ -3178,3 +3201,115 @@ function injetarEExibirPromocao() {
 })();
 
 /**=================================================================================*/
+
+/**
+ * =================================================================================
+ * 12. GOVERNANÇA LGPD, POLÍTICA DE PRIVACIDADE E CANAL DO TITULAR (DPO)
+ * =================================================================================
+ */
+
+// Exibe o documento unificado de Termos de Uso e Política de Privacidade (CDC e LGPD)
+function abrirModalTermosEPrivacidade() {
+  var modalAntigo = document.getElementById('modalTermosPrivacidade');
+  if (modalAntigo) modalAntigo.remove();
+
+  var container = document.createElement('div');
+  container.className = "modal fade";
+  container.id = "modalTermosPrivacidade";
+  container.setAttribute("tabindex", "-1");
+
+  container.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header bg-dark text-white p-3">
+          <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="bi bi-file-earmark-text-fill me-2"></i> TERMOS DE USO E PRIVACIDADE</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-secondary small" style="line-height: 1.6;">
+          
+          <!-- PARTE 1: TERMOS DE USO DA VITRINE -->
+          <h6 class="fw-bold text-dark border-bottom pb-2">PARTE I — TERMOS DE USO E NAVEGAÇÃO</h6>
+          
+          <p class="mt-2"><strong>1. Disponibilidade e Preços:</strong> As peças exibidas na vitrine virtual estão sujeitas à confirmação de estoque no momento da finalização do pedido via WhatsApp. Os valores promocionais e descontos via Pix são válidos enquanto durarem os estoques e estão sujeitos a alteração sem aviso prévio.</p>
+          
+          <p><strong>2. Cupons de Desconto:</strong> Os cupons promocionais não são cumulativos com outras promoções ativas, salvo indicação expressa na oferta. Cupons de primeira compra são intransferíveis e válidos para um único uso por titular.</p>
+          
+          <p><strong>3. Propriedade Intelectual:</strong> Todo o conteúdo, logotipos, marcas, layout, fotografias e textos desta vitrine são de titularidade exclusiva da Fitney, sendo vedada a reprodução total ou parcial sem autorização prévia.</p>
+          
+          <!-- PARTE 2: POLÍTICA DE PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD) -->
+          <h6 class="fw-bold text-dark border-bottom pb-2 mt-4">PARTE II — POLÍTICA DE PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD)</h6>
+          
+          <p class="mt-2"><strong>4. Finalidade do Tratamento (Art. 6º, I da Lei 13.709/2018):</strong> Tratamos dados estritamente para:</p>
+          <ul>
+            <li><strong>Armazenamento Local do Carrinho:</strong> Itens selecionados e preferências de navegação são salvos temporariamente na memória do seu próprio navegador (armazenamento local) para garantir o funcionamento do carrinho sem retenção prévia em nossos servidores.</li>
+            <li><strong>Notificação de Reposição de Estoque:</strong> Nome e número de WhatsApp são coletados exclusivamente mediante seu consentimento expresso (Art. 7º, I) para avisar quando um produto esgotado retornar ao estoque.</li>
+          </ul>
+
+          <p><strong>5. Não Compartilhamento e Minimização (Art. 6º, III):</strong> Coletamos apenas as informações indispensáveis para a finalidade pretendida. Seus dados de contato não são comercializados nem compartilhados com terceiros para disparos de publicidade ou marketing não autorizados.</p>
+
+          <p><strong>6. Retenção e Descarte (Art. 15 e 16):</strong> Os contatos registrados no formulário "Avise-me quando chegar" são eliminados após o envio da notificação ou no prazo limite de 90 dias.</p>
+
+          <p><strong>7. Direitos do Titular (Art. 18):</strong> A qualquer momento, você pode solicitar a confirmação, correção, atualização ou exclusão definitiva dos seus dados através do nosso <em>Canal do Titular</em> acessível no rodapé.</p>
+
+        </div>
+        <div class="modal-footer p-2 bg-light">
+          <button type="button" class="btn btn-dark btn-sm rounded-pill px-4 fw-bold" data-bs-dismiss="modal">CONCORDO COM OS TERMOS</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+  new bootstrap.Modal(container).show();
+}
+
+// Mantém compatibilidade caso ainda haja alguma chamada residual pelo nome anterior
+function abrirModalPrivacidade() {
+  abrirModalTermosEPrivacidade();
+}
+
+// Canal direto de requisição de direitos do titular (Art. 18 e Art. 41)
+function abrirModalDPO() {
+  var modalAntigo = document.getElementById('modalDPOLGPD');
+  if (modalAntigo) modalAntigo.remove();
+
+  var telLoja = window.SEU_TELEFONE_LOJA || "5500000000000";
+
+  var container = document.createElement('div');
+  container.className = "modal fade";
+  container.id = "modalDPOLGPD";
+  container.setAttribute("tabindex", "-1");
+
+  container.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header bg-dark text-white p-3">
+          <h5 class="modal-title fw-bold" style="font-size: 1rem;"><i class="bi bi-person-badge-fill me-2"></i> CANAL DO TITULAR DE DADOS (LGPD)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-secondary small">
+          <p>Em observância ao <strong>Art. 18 da Lei 13.709/2018</strong>, você pode solicitar a qualquer momento:</p>
+          <ul class="mb-3">
+            <li>Confirmação da existência de tratamento e acesso aos seus dados;</li>
+            <li>Correção de dados incompletos ou inexatos;</li>
+            <li>Eliminação dos dados pessoais tratados com consentimento.</li>
+          </ul>
+          <div class="p-3 bg-light rounded border text-center">
+            <span class="d-block fw-bold text-dark mb-1">Encarregado de Proteção de Dados (DPO)</span>
+            <span class="d-block text-muted mb-2">Canal direto via WhatsApp / E-mail</span>
+            <a href="https://wa.me/${telLoja}?text=${encodeURIComponent('Olá, gostaria de exercer meus direitos como titular de dados sob a LGPD.')}" 
+               target="_blank" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">
+              <i class="bi bi-whatsapp me-2"></i> CONTATAR ENCARREGADO
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer p-2 bg-light">
+          <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">FECHAR</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+  new bootstrap.Modal(container).show();
+}
